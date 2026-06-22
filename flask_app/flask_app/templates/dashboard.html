@@ -1,0 +1,261 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+<div>
+<div class="page-title">대시보드</div>
+<div style="font-size:11px;color:var(--text-3);margin-top:3px;letter-spacing:0.4px">REAL-TIME PRODUCTION OVERVIEW</div>
+</div>
+<div class="header-right">
+<span id="system-status" class="status-badge status-stopped">정지</span>
+<span id="current-time" style="font-family:'JetBrains Mono',monospace;font-size:12px"></span>
+</div>
+</div>
+
+<!-- ── 공지사항 배너 ── -->
+<div id="notice-banner" style="display:none;background:linear-gradient(90deg,#0C2340,#0E2A47);border:1px solid #1E40AF;border-left:4px solid #3B82F6;border-radius:8px;padding:12px 16px;margin-bottom:14px"></div>
+
+<!-- ── SYSTEM HEALTH STRIP ── -->
+<div class="health-strip" style="margin-bottom:14px">
+<div class="health-item"><span class="dot dot-ok"></span>FLASK SERVER</div>
+<div class="health-item"><span class="dot dot-off" id="h-wpf"></span>HMI</div>
+<div style="margin-left:auto;color:var(--text-3);font-size:10px;font-family:'JetBrains Mono',monospace" id="factory-info">LINE 01</div>
+</div>
+
+<!-- ── ROW 1: Camera + Recent Inspection ── -->
+<div style="display:grid;grid-template-columns:400px 1fr;gap:12px;margin-bottom:14px">
+
+<!-- 왼쪽: 카메라 두 개 (별도 카드, 각각 고정 높이) -->
+<div style="display:flex;flex-direction:column;gap:12px">
+<div class="card">
+  <div class="card-title">PCB FRONT <span style="color:var(--text-dim);font-size:9px">CAM-01</span></div>
+  <div style="position:relative;height:160px;background:#000;border:1px solid var(--border-soft);border-radius:6px;overflow:hidden">
+    <span id="live-front" style="position:absolute;top:8px;left:8px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;letter-spacing:0.6px;padding:2px 6px;border-radius:3px;z-index:2;display:none">LIVE</span>
+    <div id="cam-front" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="color:#4b5563;font-size:11px">앞면 영상 피드</span></div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-title">PCB BACK <span style="color:var(--text-dim);font-size:9px">CAM-02</span></div>
+  <div style="position:relative;height:160px;background:#000;border:1px solid var(--border-soft);border-radius:6px;overflow:hidden">
+    <span id="live-back" style="position:absolute;top:8px;left:8px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;letter-spacing:0.6px;padding:2px 6px;border-radius:3px;z-index:2;display:none">LIVE</span>
+    <div id="cam-back" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span style="color:#4b5563;font-size:11px">뒷면 영상 피드</span></div>
+  </div>
+</div>
+</div>
+
+<!-- 오른쪽: 최근 검사 결과 -->
+<div class="card" style="display:flex;flex-direction:column">
+  <div class="card-title">최근 검사 결과</div>
+  <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+    <div style="display:flex;flex-direction:column">
+      <div style="font-size:10px;color:var(--text-3);font-weight:600;letter-spacing:0.5px;margin-bottom:6px">FRONT</div>
+      <div style="flex:1;position:relative;background:#000;border:1px solid var(--border-soft);border-radius:6px;overflow:hidden" id="recent-front"><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;color:var(--text-dim)">FRONT</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column">
+      <div style="font-size:10px;color:var(--text-3);font-weight:600;letter-spacing:0.5px;margin-bottom:6px">BACK</div>
+      <div style="flex:1;position:relative;background:#000;border:1px solid var(--border-soft);border-radius:6px;overflow:hidden" id="recent-back"><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;color:var(--text-dim)">BACK</span></div>
+    </div>
+  </div>
+  <div id="recent-result" style="text-align:center;margin-bottom:6px"><span class="badge-ok">대기</span></div>
+  <div id="recent-time" style="text-align:center;font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;margin-bottom:12px"></div>
+  <a href="/monitoring" style="display:block;text-align:center;padding:8px;color:var(--accent);font-size:12px;text-decoration:none;background:var(--accent-soft);border-radius:6px;font-weight:600">전체 화면 모니터링 →</a>
+</div>
+
+</div>
+
+<!-- ── ROW 2: KPIs ── -->
+<div class="grid" style="grid-template-columns:1fr 1fr 2fr;gap:12px;margin-bottom:14px">
+<div class="card">
+<div class="card-title">온도</div>
+<div class="metric-value" id="val-temp">--<span class="metric-unit">°C</span></div>
+</div>
+<div class="card">
+<div class="card-title">습도</div>
+<div class="metric-value" id="val-humid">--<span class="metric-unit">%</span></div>
+</div>
+<div class="card">
+<div class="card-title">오늘 현황 · TODAY</div>
+<div class="today-row">
+<span class="today-num" id="today-total">0</span><span style="font-size:11px;color:var(--text-3)">건</span>
+<span style="color:var(--ok);font-weight:700;font-family:'JetBrains Mono',monospace" id="today-ok">0</span><span style="font-size:10px;color:var(--text-3)">OK</span>
+<span style="color:var(--err);font-weight:700;font-family:'JetBrains Mono',monospace" id="today-ng">0</span><span style="font-size:10px;color:var(--text-3)">NG</span>
+<span class="yield-badge" id="today-yield">0%</span>
+</div>
+</div>
+</div>
+
+<!-- ── ROW 2-B: Takt / Cycle / 불량 발생율 ── -->
+<div class="grid" style="grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px">
+<div class="card" style="text-align:center">
+  <div class="card-title" style="justify-content:center">Cycle Time <span style="color:var(--text-dim);font-size:9px">ACTUAL</span></div>
+  <div class="metric-value" id="val-cycle" style="font-size:28px">--<span class="metric-unit">s</span></div>
+  <div id="cycle-vs-takt" style="font-size:11px;margin-top:4px;color:var(--text-3)">목표 대비 --</div>
+</div>
+<div class="card" style="text-align:center">
+  <div class="card-title" style="justify-content:center">Takt Time <span style="color:var(--text-dim);font-size:9px">TARGET</span></div>
+  <div class="metric-value" id="val-takt" style="font-size:28px">--<span class="metric-unit">s</span></div>
+  <div style="font-size:11px;margin-top:4px;color:var(--text-3)">설정 &gt; 운영 정책</div>
+</div>
+<div class="card" style="text-align:center">
+  <div class="card-title" style="justify-content:center">불량 발생율 <span style="color:var(--text-dim);font-size:9px">TODAY</span></div>
+  <div class="metric-value" id="val-defect-rate" style="font-size:28px">--%</div>
+  <div id="defect-rate-label" style="font-size:11px;margin-top:4px;color:var(--text-3)">오늘 기준</div>
+</div>
+</div>
+
+<!-- ── ROW 3: Sensor Chart + Alarms ── -->
+<div class="grid" style="grid-template-columns:1.5fr 1fr;margin-bottom:14px">
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+<div class="card-title" style="margin:0">온습도 추이 · ENV TREND</div>
+<div class="chart-tabs">
+<button class="chart-tab active" onclick="loadChart(1,this)">1H</button>
+<button class="chart-tab" onclick="loadChart(6,this)">6H</button>
+<button class="chart-tab" onclick="loadChart(24,this)">24H</button>
+</div>
+</div>
+<div class="chart-container"><canvas id="sensor-chart"></canvas></div>
+</div>
+<div class="card">
+<div class="card-title">최근 알람 · RECENT ALARMS</div>
+<div id="alarm-list" style="max-height:240px;overflow-y:auto"><div class="empty">알람 없음</div></div>
+</div>
+</div>
+
+{% endblock %}
+{% block scripts %}<script>
+setInterval(()=>{document.getElementById('current-time').textContent=new Date().toLocaleString('ko-KR',{hour12:false})},1000);
+fetch('/api/system-status').then(r=>r.json()).then(d=>{if(!d.status)return;const e=document.getElementById('system-status'),b=document.getElementById('estop-banner');if(d.status==='running'){e.textContent='가동 중';e.className='status-badge status-running'}else if(d.status==='estop'){e.textContent='비상정지';e.className='status-badge status-stopped';if(b)b.classList.add('show')}}).catch(()=>{});
+
+// 카메라 영상 수신
+let lastCamera=0;
+socket.on('camera_frame',d=>{
+  lastCamera=Date.now();
+  if(d.front){const el=document.getElementById('cam-front');el.innerHTML=`<img src="data:image/jpeg;base64,${d.front}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`;document.getElementById('live-front').style.display='block';}
+  if(d.back){const el=document.getElementById('cam-back');el.innerHTML=`<img src="data:image/jpeg;base64,${d.back}" style="width:100%;height:100%;object-fit:cover;border-radius:6px">`;document.getElementById('live-back').style.display='block';}
+});
+
+function loadStats(){fetch('/api/stats').then(r=>r.json()).then(d=>{const t=d.today||{};document.getElementById('today-total').textContent=t.total||0;document.getElementById('today-ok').textContent=t.ok_count||0;document.getElementById('today-ng').textContent=t.ng_count||0;document.getElementById('today-yield').textContent=(t.yield_rate||0)+'%';
+  const total=t.total||0,ng=t.ng_count||0;
+  const rate=total>0?Math.round(ng/total*1000)/10:null;
+  const rEl=document.getElementById('val-defect-rate'),lEl=document.getElementById('defect-rate-label');
+  if(rate===null){rEl.textContent='--%';rEl.style.color='';lEl.textContent='데이터 없음';}
+  else{rEl.textContent=rate+'%';rEl.style.color=rate>=5?'var(--err)':rate>=2?'var(--warn)':'var(--ok)';lEl.textContent=rate>=5?'임계값 초과':rate>=2?'주의':rate===0?'불량 없음':'양호';}
+})}
+loadStats();setInterval(loadStats,10000);
+
+function loadCycleTime(){fetch('/api/cycle-time').then(r=>r.json()).then(d=>{
+  const cEl=document.getElementById('val-cycle'),vEl=document.getElementById('cycle-vs-takt'),tEl=document.getElementById('val-takt');
+  const takt=d.takt_time||30;
+  tEl.innerHTML=takt+'<span class="metric-unit">s</span>';
+  if(d.cycle_time===null||d.cycle_time===undefined){cEl.innerHTML='--<span class="metric-unit">s</span>';cEl.style.color='';vEl.textContent='데이터 없음';return;}
+  const ct=d.cycle_time;
+  cEl.innerHTML=ct+'<span class="metric-unit">s</span>';
+  const diff=Math.round((ct-takt)*10)/10;
+  if(diff<=0){cEl.style.color='var(--ok)';vEl.textContent='목표보다 '+Math.abs(diff)+'s 빠름';}
+  else{cEl.style.color='var(--err)';vEl.textContent='목표보다 '+diff+'s 느림';}
+}).catch(()=>{})}
+loadCycleTime();setInterval(loadCycleTime,15000);
+
+
+function loadAlarms(){fetch('/api/alarm').then(r=>r.json()).then(data=>{const el=document.getElementById('alarm-list'),badge=document.getElementById('alarm-badge');if(!data||data.length===0){el.innerHTML='<div class="empty">알람 없음</div>';badge.style.display='none';return}badge.textContent=data.length;badge.style.display='inline';el.innerHTML=data.slice(0,8).map(a=>{const cls=a.type==='ESTOP'?'alarm-danger':'alarm-warn';const ts=a.timestamp?new Date(a.timestamp).toLocaleTimeString('ko-KR',{hour12:false}):'';return`<div class="alarm-item ${cls}"><div style="flex:1"><div style="font-size:11px;font-weight:700;color:${a.type==='ESTOP'?'var(--err)':'var(--warn)'};letter-spacing:0.5px">${a.type}</div><div style="font-size:11px;color:var(--text-2);margin-top:2px">${a.detail||''}</div><div style="font-size:10px;color:var(--text-dim);margin-top:3px;font-family:'JetBrains Mono',monospace">${ts}</div></div></div>`}).join('')})}
+loadAlarms();setInterval(loadAlarms,5000);
+
+// 활성 공지사항 표시
+fetch('/api/notices?active=1').then(r=>r.json()).then(notices=>{
+  if(!notices||!notices.length)return;
+  const banner=document.getElementById('notice-banner');
+  banner.style.display='block';
+  banner.innerHTML=notices.slice(0,3).map(n=>`<div style="margin-bottom:4px"><span style="color:#60A5FA;font-weight:700;font-size:12px;margin-right:8px">📢</span><span style="color:#E2E8F0;font-weight:600;font-size:13px">${n.title}</span><span style="color:#94A3B8;font-size:12px;margin-left:10px">${n.content||''}</span></div>`).join('');
+});
+
+// 공장 정보 표시
+fetch('/api/policy').then(r=>r.json()).then(p=>{
+  if(p&&p.factory){
+    const el=document.getElementById('factory-info');
+    if(el)el.textContent=`${p.factory.company} · ${p.factory.factory} · ${p.factory.line} · ${p.factory.model}`;
+  }
+}).catch(()=>{});
+
+// Health indicators
+let lastSensor=0;
+socket.on('sensor_update',()=>{lastSensor=Date.now();updHealth();});
+fetch('/api/sensor').then(r=>r.json()).then(d=>{
+  if(!d||!Object.keys(d).length)return;
+  if(d._received_at&&(Date.now()/1000-d._received_at)<30){lastSensor=Date.now();}
+  const e=id=>document.getElementById(id);
+  if(d.temperature!=null&&e('val-temp'))e('val-temp').innerHTML=`${d.temperature}<span class="metric-unit">°C</span>`;
+  if(d.humidity!=null&&e('val-humid'))e('val-humid').innerHTML=`${d.humidity}<span class="metric-unit">%</span>`;
+  if(d.conveyor_rpm!=null&&e('val-rpm'))e('val-rpm').innerHTML=`${d.conveyor_rpm}<span class="metric-unit"> RPM</span>`;
+  if(d.box_ng_level!=null&&e('bar-ng')){e('bar-ng').style.width=d.box_ng_level+'%';e('pct-ng').textContent=d.box_ng_level+'%';}
+  if(d.box_ok_level!=null&&e('bar-ok')){e('bar-ok').style.width=d.box_ok_level+'%';e('pct-ok').textContent=d.box_ok_level+'%';}
+  updHealth();
+}).catch(()=>{});
+function updHealth(){
+  const now=Date.now();
+  const hWpf=document.getElementById('h-wpf');
+  const setDot=(el,on)=>{el.classList.toggle('dot-ok',on);el.classList.toggle('dot-off',!on)};
+  const connected=now-lastSensor<30000;
+  const camLive=now-lastCamera<5000;
+  setDot(hWpf,connected);
+  if(!connected){
+    const e=id=>document.getElementById(id);
+    if(e('val-temp'))e('val-temp').innerHTML=`--<span class="metric-unit">°C</span>`;
+    if(e('val-humid'))e('val-humid').innerHTML=`--<span class="metric-unit">%</span>`;
+  }
+  if(!camLive){
+    document.getElementById('live-front').style.display='none';
+    document.getElementById('live-back').style.display='none';
+  }
+}
+updHealth();setInterval(updHealth,3000);
+
+let sensorChart=null;
+function loadChart(hours,btn){
+  document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  fetch(`/api/sensor/history?hours=${hours}`).then(r=>r.json()).then(data=>{
+    // 시간 단위 버킷: 키를 timestamp 기반으로 정렬 보장
+    const bkt=new Map();
+    // 버킷 크기: 1H→5분, 6H→15분, 24H→60분 — 묶을수록 평균이 부드러워짐
+    const bucketMin=hours<=1?5:hours<=6?15:60;
+    (Array.isArray(data)?data:[]).forEach(d=>{
+      const t=new Date(d.timestamp);
+      let key,label;
+      if(hours<=6){
+        const rounded=Math.floor(t.getMinutes()/bucketMin)*bucketMin;
+        const mm=String(rounded).padStart(2,'0');
+        key=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')+' '+String(t.getHours()).padStart(2,'0')+':'+mm;
+        label=t.getHours()+':'+mm;
+      } else {
+        key=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')+' '+String(t.getHours()).padStart(2,'0');
+        label=(t.getHours()===0?`${t.getMonth()+1}/${t.getDate()} 0`:t.getHours())+'시';
+      }
+      if(!bkt.has(key))bkt.set(key,{label,ts:[],hs:[]});
+      bkt.get(key).ts.push(+d.temperature||0);
+      bkt.get(key).hs.push(+d.humidity||0);
+    });
+    // 시간순 정렬
+    const sorted=[...bkt.entries()].sort((a,b)=>a[0]>b[0]?1:-1);
+    let labels=[],temps=[],humids=[];
+    let lastDate='';
+    sorted.forEach(([key,v])=>{
+      let lbl=v.label;
+      if(hours>6){
+        const datepart=key.substring(0,10); // YYYY-MM-DD
+        if(datepart!==lastDate){
+          const d=new Date(datepart+'T00:00:00');
+          lbl=`${d.getMonth()+1}/${d.getDate()} ${v.label}`;
+          lastDate=datepart;
+        }
+      }
+      labels.push(lbl);
+      temps.push(+(v.ts.reduce((a,b)=>a+b,0)/v.ts.length).toFixed(1));
+      humids.push(+(v.hs.reduce((a,b)=>a+b,0)/v.hs.length).toFixed(1));
+    });
+    if(sensorChart)sensorChart.destroy();
+    sensorChart=new Chart(document.getElementById('sensor-chart'),{type:'line',data:{labels,datasets:[{label:'온도 °C',data:temps,borderColor:'#EF4444',backgroundColor:'rgba(239,68,68,0.06)',borderWidth:2,pointRadius:0,pointHoverRadius:3,tension:0.6,fill:true},{label:'습도 %',data:humids,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.06)',borderWidth:2,pointRadius:0,pointHoverRadius:3,tension:0.6,fill:true}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{font:{size:11,family:"'Inter',sans-serif"},color:'#94A3B8',usePointStyle:true,pointStyle:'circle'}}},scales:{x:{ticks:{font:{size:10,family:"'JetBrains Mono',monospace"},color:'#64748B',maxTicksLimit:hours<=1?8:hours<=6?10:24},grid:{color:'rgba(42,56,72,0.2)'}},y:{ticks:{font:{size:10,family:"'JetBrains Mono',monospace"},color:'#64748B'},grid:{color:'rgba(42,56,72,0.2)'}}}}})
+  }).catch(()=>{})
+}
+loadChart(1);
+</script>{% endblock %}
+

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+<div>
+<div class="page-title">검사 이력</div>
+<div style="font-size:11px;color:var(--text-3);margin-top:3px;letter-spacing:0.4px">INSPECTION HISTORY · ALL RECORDS</div>
+</div>
+<div class="header-right" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+<input id="fsn" class="form-input" placeholder="시리얼 번호 검색" style="width:160px;padding:7px 10px;font-size:12px" onkeydown="if(event.key==='Enter')lh(1)">
+<select id="fr" class="form-input" style="width:auto;padding:7px 10px;font-size:12px" onchange="lh(1)">
+<option value="">전체</option><option value="OK">양품</option><option value="NG">불량</option>
+</select>
+<input type="date" id="fd" class="form-input" style="width:auto;padding:7px 10px;font-size:12px" onchange="lh(1)">
+<span style="color:var(--text-3)">~</span>
+<input type="date" id="ft" class="form-input" style="width:auto;padding:7px 10px;font-size:12px" onchange="lh(1)">
+<button class="btn btn-accent btn-sm" onclick="lh(1)">검색</button>
+</div>
+</div>
+<div class="card" style="padding:0">
+<table class="table">
+<thead><tr><th>시간</th><th>시리얼</th><th>판정</th><th>불량유형</th><th>신뢰도</th><th style="text-align:right">상세</th></tr></thead>
+<tbody id="hb"></tbody>
+</table>
+<div class="pagination" id="pg" style="padding:14px"></div>
+</div>
+<div id="modal" style="display:none;position:fixed;inset:0;z-index:200;justify-content:center;align-items:center" class="modal-bg">
+<div class="modal-box" style="padding:24px;width:720px;max-height:85vh;overflow-y:auto">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+<h3 id="mt" style="font-size:15px;font-weight:600;color:var(--text)">상세</h3>
+<button onclick="cm()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3)">✕</button>
+</div>
+<div class="grid grid-2" style="margin-bottom:16px">
+<div><div class="card-title">FRONT (YOLO 부품 검사)</div><div id="mf" style="aspect-ratio:4/3;background:#000;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden"><span style="color:var(--text-dim);font-size:11px">없음</span></div></div>
+<div><div class="card-title">BACK (OpenCV 그을림 검사)</div><div id="mb" style="aspect-ratio:4/3;background:#000;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden"><span style="color:var(--text-dim);font-size:11px">없음</span></div></div>
+</div>
+<div id="mi" style="font-size:12px;color:var(--text-2);font-family:'JetBrains Mono',monospace;background:var(--bg-soft);padding:12px;border-radius:8px"></div>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+function lh(p){
+  const r=document.getElementById('fr').value,d=document.getElementById('fd').value,t=document.getElementById('ft').value;
+  const sn=document.getElementById('fsn').value.trim();
+  let u=`/api/history?page=${p}&result=${r}`;
+  if(d)u+=`&date_from=${d}`;
+  if(t)u+=`&date_to=${t}`;
+  if(sn)u+=`&serial=${encodeURIComponent(sn)}`;
+  fetch(u).then(r=>r.json()).then(d=>{
+    const b=document.getElementById('hb');
+    if(!d.data||!d.data.length){b.innerHTML='<tr><td colspan="7" class="empty">없음</td></tr>';document.getElementById('pg').innerHTML='';return}
+    b.innerHTML=d.data.map(r=>{
+      const snBadge=r.serial_number?`<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent)">${r.serial_number}</span>`:'<span style="color:var(--text-3)">-</span>';
+      const fc=r.front_conf!=null?(r.front_conf*100).toFixed(1):'0';
+      return `<tr><td>${r.timestamp||''}</td><td>${snBadge}</td><td><span class="${r.result==='OK'?'badge-ok':'badge-ng'}">${r.result}</span></td><td style="color:var(--text-2)">${r.defect_type||'-'}</td><td style="color:var(--accent)">${fc}</td><td style="text-align:right"><button class="btn btn-sm btn-accent" onclick='sd(${JSON.stringify(r)})'>보기</button></td></tr>`;
+    }).join('');
+    document.getElementById('pg').innerHTML=buildPager(d.page,d.pages);
+  });
+}
+lh(1);
+
+function buildPager(cur,total){
+  if(total<=1)return '';
+  const GROUP=10,JUMP=5; // 한 그룹 10페이지, 화살표 5페이지씩
+  const gStart=Math.floor((cur-1)/GROUP)*GROUP+1;
+  const gEnd=Math.min(gStart+GROUP-1,total);
+  let h='<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center">';
+  // 맨앞·이전 그룹
+  h+=`<button class="page-btn" onclick="lh(1)" ${cur===1?'disabled':''} title="첫 페이지">«</button>`;
+  h+=`<button class="page-btn" onclick="lh(${Math.max(1,cur-JUMP)})" ${cur===1?'disabled':''} title="${JUMP}페이지 이전">‹</button>`;
+  // 페이지 번호 그룹
+  for(let i=gStart;i<=gEnd;i++)
+    h+=`<button class="page-btn${i===cur?' active':''}" onclick="lh(${i})">${i}</button>`;
+  // 다음 그룹·맨끝
+  h+=`<button class="page-btn" onclick="lh(${Math.min(total,cur+JUMP)})" ${cur===total?'disabled':''} title="${JUMP}페이지 다음">›</button>`;
+  h+=`<button class="page-btn" onclick="lh(${total})" ${cur===total?'disabled':''} title="마지막 페이지">»</button>`;
+  h+=`<span style="font-size:11px;color:var(--text-3);margin-left:6px">${cur} / ${total}p</span>`;
+  h+='</div>';
+  return h;
+}
+
+function sd(r){
+  document.getElementById('modal').style.display='flex';
+  const sn=r.serial_number?` — S/N: ${r.serial_number}`:'';
+  document.getElementById('mt').textContent=`#${r.id} — ${r.result}${sn}`;
+  document.getElementById('mf').innerHTML=r.front_image?`<img src="/images/${r.front_image}" style="width:100%;height:100%;object-fit:contain">`:'<span style="color:var(--text-dim);font-size:11px">없음</span>';
+  document.getElementById('mb').innerHTML=r.back_image?`<img src="/images/${r.back_image}" style="width:100%;height:100%;object-fit:contain">`:'<span style="color:var(--text-dim);font-size:11px">없음</span>';
+  document.getElementById('mi').innerHTML=`<div style="display:grid;grid-template-columns:100px 1fr;gap:6px 14px">
+<span style="color:var(--text-3)">시리얼</span><span>${r.serial_number||'-'}</span>
+<span style="color:var(--text-3)">판정</span><span style="color:${r.result==='OK'?'var(--ok)':'var(--err)'};font-weight:700">${r.result} ${r.defect_type?'— '+r.defect_type:''}</span>
+<span style="color:var(--text-3)">앞면(YOLO)</span><span>신뢰도 ${r.front_conf!=null?(r.front_conf*100).toFixed(1)+'%':'-'}</span>
+<span style="color:var(--text-3)">시간</span><span>${r.timestamp}</span>
+</div>`;
+}
+function cm(){document.getElementById('modal').style.display='none'}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')cm()})
+</script>{% endblock %}

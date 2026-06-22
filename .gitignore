@@ -1,0 +1,24 @@
+# WPF (C#) 빌드 산출물
+WPF/**/bin/
+WPF/**/obj/
+WPF/**/.vs/
+*.user
+
+# flask_app (Python)
+flask_app/**/__pycache__/
+flask_app/**/venv/
+flask_app/**/.venv/
+*.pyc
+
+# 대용량: 모델·영상·데이터·검사이미지
+*.onnx
+*.mp4
+*.avi
+**/runs/
+**/datasets/
+**/captures/      # ← 검사이미지 저장 폴더명에 맞게 수정
+
+# ★비밀정보 (DB 접속정보 등)
+*.env
+**/appsettings.Development.json
+**/db_config*.py  # ← MySQL 비번 든 파일명에 맞게 수정

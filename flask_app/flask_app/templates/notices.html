@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+<div>
+<div class="page-title">공지사항</div>
+<div style="font-size:11px;color:var(--text-3);margin-top:3px;letter-spacing:0.4px">NOTICES · ANNOUNCEMENTS</div>
+</div>
+<div class="header-right">
+{% if session.get('role')=='super_admin' %}
+<a href="/settings" class="btn btn-accent" style="text-decoration:none">+ 공지 작성 (운영 설정으로)</a>
+{% endif %}
+</div>
+</div>
+
+<div id="notices-wrap"></div>
+
+{% endblock %}
+{% block scripts %}<script>
+function loadAll(){
+  fetch('/api/notices').then(r=>r.json()).then(data=>{
+    const el=document.getElementById('notices-wrap');
+    if(!data||!data.length){el.innerHTML='<div class="card"><div class="empty">등록된 공지가 없습니다</div></div>';return}
+    // 활성 먼저, 그다음 비활성
+    const active=data.filter(n=>n.active);
+    const inactive=data.filter(n=>!n.active);
+    let html='';
+    if(active.length){
+      html+='<div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.5px;margin-bottom:10px">현재 공지 · ACTIVE</div>';
+      html+=active.map(n=>renderItem(n,true)).join('');
+    }
+    if(inactive.length){
+      html+='<div style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.5px;margin:20px 0 10px">지난 공지 · ARCHIVED</div>';
+      html+=inactive.map(n=>renderItem(n,false)).join('');
+    }
+    el.innerHTML=html;
+  })
+}
+function renderItem(n,active){
+  const accent=active?'#3B82F6':'#475569';
+  const titleColor=active?'var(--text)':'var(--text-2)';
+  const opacity=active?'1':'0.65';
+  return `<div class="card" style="margin-bottom:10px;border-left:4px solid ${accent};opacity:${opacity}">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px">
+<div style="font-size:15px;font-weight:700;color:${titleColor};flex:1">${active?'📢 ':''}${n.title}</div>
+<div style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;white-space:nowrap">${n.created_at}</div>
+</div>
+<div style="font-size:13px;color:var(--text-2);white-space:pre-wrap;line-height:1.6;margin-bottom:8px">${n.content||''}</div>
+<div style="font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace">작성자: ${n.created_by||'-'} · ${active?'활성':'비활성'}</div>
+</div>`;
+}
+loadAll();
+</script>{% endblock %}

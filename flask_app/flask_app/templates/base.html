@@ -1,0 +1,29 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PCB Inspection MES</title><link rel="stylesheet" href="/static/css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% block head %}{% endblock %}</head><body>
+<div id="estop-banner" class="estop-banner">⚠ EMERGENCY STOP — 비상정지 ⚠</div>
+<nav class="sidebar">
+<div class="sidebar-logo">PCB INSPECTION MES</div>
+<div class="sidebar-user">{{ session.get('username','') }} · {{ session.get('role','') }}</div>
+<div class="sidebar-nav">
+<a href="/" class="nav-item {% if request.path=='/' %}active{% endif %}"><span>▤</span> 대시보드</a>
+<a href="/monitoring" class="nav-item {% if request.path=='/monitoring' %}active{% endif %}"><span>◉</span> 모니터링</a>
+<a href="/history" class="nav-item {% if request.path=='/history' %}active{% endif %}"><span>≡</span> 검사 이력</a>
+<a href="/statistics" class="nav-item {% if request.path=='/statistics' %}active{% endif %}"><span>◢</span> 생산 통계</a>
+<a href="/alarm" class="nav-item {% if request.path=='/alarm' %}active{% endif %}"><span>⚠</span> 알람 관리<span id="alarm-badge" class="badge" style="display:none">0</span></a>
+<a href="/notices" class="nav-item {% if request.path=='/notices' %}active{% endif %}"><span>📢</span> 공지사항</a>
+<a href="/messages" class="nav-item {% if request.path=='/messages' %}active{% endif %}"><span>💬</span> 메시지<span id="msg-badge" class="badge" style="display:none">0</span></a>
+{% if session.get('role')=='super_admin' %}
+<a href="/settings" class="nav-item {% if request.path=='/settings' %}active{% endif %}"><span>⚙</span> 운영 설정</a>
+<a href="/users" class="nav-item {% if request.path=='/users' %}active{% endif %}"><span>◈</span> 회원관리</a>
+{% endif %}
+</div>
+<div class="sidebar-footer">
+<div class="sidebar-status"><span class="dot dot-off" id="dot-flask"></span><span id="lbl-flask">Socket: 연결 중</span></div>
+<a href="/logout" class="btn-logout">LOGOUT</a></div></nav>
+<main class="main">{% block content %}{% endblock %}</main>
+<script src="/static/js/main.js"></script>{% block scripts %}{% endblock %}</body></html>

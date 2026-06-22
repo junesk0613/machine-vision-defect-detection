@@ -1,0 +1,14 @@
+[
+  {
+    "id": "line-01",
+    "name": "LINE 01",
+    "factory": "융합공장",
+    "model": "PG"
+  },
+  {
+    "id": "line-02",
+    "name": "LINE 02",
+    "factory": "융합공장",
+    "model": "SG"
+  }
+]

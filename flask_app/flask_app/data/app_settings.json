@@ -1,0 +1,19 @@
+{
+  "factory": {
+    "company": "모블전자",
+    "factory": "융합공장",
+    "line": "LINE 01",
+    "model": "PG"
+  },
+  "alarm_threshold": {
+    "hourly_ng_max": 10,
+    "daily_defect_pct_max": 5
+  },
+  "email_recipients": [],
+  "retention": {
+    "images_days": 30,
+    "alarms_days": 90,
+    "audit_days": 60
+  },
+  "takt_time": 50.0
+}

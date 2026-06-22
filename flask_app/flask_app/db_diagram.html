@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>PCB Inspection MES · DB 관계도</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0F172A; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 40px 20px; }
+  h1 { color: #E2E8F0; font-size: 20px; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
+  p  { color: #64748B; font-size: 12px; margin-bottom: 32px; font-family: 'JetBrains Mono', monospace; }
+  .diagram-wrap { background: #1E293B; border: 1px solid #334155; border-radius: 16px; padding: 40px; max-width: 1100px; width: 100%; }
+  .mermaid { display: flex; justify-content: center; }
+  .legend { margin-top: 32px; display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+  .leg-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #94A3B8; }
+  .leg-dot { width: 10px; height: 10px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<h1>PCB Inspection MES · Database Schema</h1>
+<p>pcb_inspection · MySQL 8.0 · 6 tables</p>
+
+<div class="diagram-wrap">
+<div class="mermaid">
+erDiagram
+    users {
+        int id PK
+        varchar username UK
+        varchar password_hash
+        enum role "super_admin / admin / operator"
+        datetime created_at
+    }
+
+    active_sessions {
+        int id PK
+        int user_id FK
+        varchar sid UK
+        datetime login_at
+    }
+
+    inspection_log {
+        int id PK
+        datetime timestamp
+        enum result "OK / NG"
+        varchar defect_type
+        varchar serial_number
+        varchar front_image
+        varchar back_image
+        decimal front_conf
+        decimal back_conf
+    }
+
+    sensor_log {
+        int id PK
+        datetime timestamp
+        decimal temperature
+        decimal humidity
+        decimal conveyor_rpm
+        decimal box_ng_level
+        decimal box_ok_level
+    }
+
+    alarm_log {
+        int id PK
+        datetime timestamp
+        varchar type
+        text detail
+        tinyint resolved
+        datetime resolved_at
+    }
+
+    system_settings {
+        int id PK
+        decimal yolo_conf
+        decimal temp_min
+        decimal temp_max
+        decimal humid_min
+        decimal humid_max
+        datetime updated_at
+    }
+
+    users ||--o{ active_sessions : "로그인 세션"
+</div>
+
+<div class="legend">
+  <div class="leg-item"><div class="leg-dot" style="background:#3B82F6"></div> PK — Primary Key</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#F59E0B"></div> FK — Foreign Key (CASCADE DELETE)</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#22C55E"></div> UK — Unique Key</div>
+  <div class="leg-item" style="margin-left:16px;color:#64748B">inspection_log · sensor_log · alarm_log · system_settings 는 독립 테이블 (외래키 없음)</div>
+</div>
+</div>
+
+<script>
+  mermaid.initialize({ theme: 'dark', themeVariables: { primaryColor: '#1E3A5F', primaryTextColor: '#E2E8F0', primaryBorderColor: '#3B82F6', lineColor: '#475569', secondaryColor: '#1E293B', tertiaryColor: '#0F172A', fontSize: '14px' }, er: { diagramPadding: 30, layoutDirection: 'TB', minEntityWidth: 100, minEntityHeight: 75, entityPadding: 15, useMaxWidth: true } });
+</script>
+</body>
+</html>

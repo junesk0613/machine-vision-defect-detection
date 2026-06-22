@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mon-page">
+<div class="page-header">
+<div>
+<div class="page-title">실시간 모니터링</div>
+<div style="font-size:11px;color:var(--text-3);margin-top:3px;letter-spacing:0.4px">REAL-TIME MONITORING · LINE 01</div>
+</div>
+<div class="header-right">
+<span id="mon-status" class="status-badge status-stopped">정지</span>
+<span id="mon-time" style="color:var(--text-2);font-family:'JetBrains Mono',monospace;font-size:12px"></span>
+</div>
+</div>
+
+<div class="grid grid-2" style="margin-bottom:14px">
+<div class="card">
+<div class="card-title">PCB FRONT · CAM-01 <span style="margin-left:auto;color:var(--text-dim);font-size:9px;font-family:'JetBrains Mono',monospace">1920×1080 · 30FPS</span></div>
+<div class="cam-feed" id="mon-cam-front"><span style="color:#4b5563;font-size:13px">앞면 영상 피드</span></div>
+</div>
+<div class="card">
+<div class="card-title">PCB BACK · CAM-02 <span style="margin-left:auto;color:var(--text-dim);font-size:9px;font-family:'JetBrains Mono',monospace">1920×1080 · 30FPS</span></div>
+<div class="cam-feed" id="mon-cam-back"><span style="color:#4b5563;font-size:13px">뒷면 영상 피드</span></div>
+</div>
+</div>
+
+<div class="grid grid-4" style="margin-bottom:14px">
+<div class="card" style="text-align:center">
+<div class="card-title" style="justify-content:center">최근 판정</div>
+<div id="mon-result" style="font-size:32px;font-weight:700;color:var(--ok);font-family:'JetBrains Mono',monospace;letter-spacing:-0.5px">대기</div>
+<div id="mon-defect" style="font-size:11px;color:var(--text-3);margin-top:4px"></div>
+</div>
+<div class="card" style="text-align:center">
+<div class="card-title" style="justify-content:center">오늘 검사 · TODAY</div>
+<div id="mon-total" style="font-size:32px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;letter-spacing:-0.5px">0</div>
+<div style="font-size:10px;color:var(--text-3);margin-top:4px">UNITS INSPECTED</div>
+</div>
+<div class="card" style="text-align:center">
+<div class="card-title" style="justify-content:center">수율 · YIELD</div>
+<div id="mon-yield" style="font-size:32px;font-weight:700;color:var(--ok);font-family:'JetBrains Mono',monospace;letter-spacing:-0.5px">0%</div>
+<div style="font-size:10px;color:var(--text-3);margin-top:4px">PASS RATE</div>
+</div>
+<div class="card">
+<div class="card-title">불량 유형 · DEFECT TYPES</div>
+<div id="mon-defects" style="font-size:11px;color:var(--text);margin-top:4px;font-family:'JetBrains Mono',monospace;line-height:1.6">-</div>
+</div>
+</div>
+
+</div>
+{% endblock %}
+{% block scripts %}<script>
+setInterval(()=>{document.getElementById('mon-time').textContent=new Date().toLocaleString('ko-KR',{hour12:false})},1000);
+// main.js의 글로벌 socket 사용
+let monCamTimer=null;
+socket.on('camera_frame',d=>{
+  if(monCamTimer)clearTimeout(monCamTimer);
+  if(d.front){document.getElementById('mon-cam-front').innerHTML=`<img src="data:image/jpeg;base64,${d.front}">`;document.getElementById('mon-cam-front').classList.add('cam-live');}
+  if(d.back){document.getElementById('mon-cam-back').innerHTML=`<img src="data:image/jpeg;base64,${d.back}">`;document.getElementById('mon-cam-back').classList.add('cam-live');}
+  monCamTimer=setTimeout(()=>{
+    document.getElementById('mon-cam-front').classList.remove('cam-live');
+    document.getElementById('mon-cam-back').classList.remove('cam-live');
+  },5000);
+});
+socket.on('inspection_result',d=>{const r=document.getElementById('mon-result');r.textContent=d.result;r.style.color=d.result==='OK'?'#22C55E':'#EF4444';document.getElementById('mon-defect').textContent=d.defect_type||''});
+socket.on('system_action',d=>{const el=document.getElementById('mon-status'),b=document.getElementById('estop-banner');if(d.action==='start'){el.textContent='가동 중';el.className='status-badge status-running';if(b)b.classList.remove('show')}else if(d.action==='estop'){el.textContent='비상정지';el.className='status-badge status-stopped';if(b)b.classList.add('show')}else{el.textContent='정지';el.className='status-badge status-stopped';if(b)b.classList.remove('show')}});
+fetch('/api/system-status').then(r=>r.json()).then(d=>{if(!d.status)return;const el=document.getElementById('mon-status'),b=document.getElementById('estop-banner');if(d.status==='running'){el.textContent='가동 중';el.className='status-badge status-running'}else if(d.status==='estop'){el.textContent='비상정지';el.className='status-badge status-stopped';if(b)b.classList.add('show')}}).catch(()=>{});
+function loadMonStats(){fetch('/api/stats').then(r=>r.json()).then(d=>{const t=d.today||{};document.getElementById('mon-total').textContent=t.total||0;document.getElementById('mon-yield').textContent=(t.yield_rate||0)+'%';
+const dp=d.defect_pct||[];document.getElementById('mon-defects').innerHTML=dp.length?dp.map(x=>`<div>${x.defect_type}: <span style="color:var(--err);font-weight:700">${x.cnt}건</span> (${x.pct}%)</div>`).join(''):'<span style="color:var(--text-dim)">불량 없음</span>'})}
+loadMonStats();setInterval(loadMonStats,5000);
+</script>{% endblock %}

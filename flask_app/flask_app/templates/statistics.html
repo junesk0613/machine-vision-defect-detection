@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+<div>
+<div class="page-title">생산 통계</div>
+<div style="font-size:11px;color:var(--text-3);margin-top:3px;letter-spacing:0.4px">PRODUCTION STATISTICS · ANALYTICS</div>
+</div>
+<div class="header-right">
+<input type="date" id="sf" class="form-input" style="width:auto;padding:7px 10px;font-size:12px">
+<span style="color:var(--text-3)">~</span>
+<input type="date" id="st" class="form-input" style="width:auto;padding:7px 10px;font-size:12px">
+<button class="btn btn-accent btn-sm" onclick="loadAll()">조회</button>
+<button class="btn btn-stop btn-sm" onclick="setToday()">오늘</button>
+</div>
+</div>
+
+<!-- 조회 정보 배너 -->
+<div id="query-info" style="background:var(--bg-soft);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+<div style="display:flex;align-items:center;gap:10px">
+<span style="font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:0.5px">조회 기간</span>
+<span id="query-range" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);font-weight:700">-</span>
+<span id="query-loading" style="font-size:11px;color:var(--warn);display:none;align-items:center;gap:5px">
+<span style="width:8px;height:8px;background:var(--warn);border-radius:50%;display:inline-block;animation:pulse 1s infinite"></span>조회 중...
+</span>
+<span id="query-done" style="font-size:11px;color:var(--ok);display:none">✓ 조회 완료 · <span id="query-done-time"></span></span>
+</div>
+<div id="query-summary" style="font-size:11px;color:var(--text-2);font-family:'JetBrains Mono',monospace"></div>
+</div>
+
+<!-- 알람 임계값 초과 알림 배너 -->
+<div id="threshold-alerts" style="margin-bottom:14px"></div>
+
+<div class="grid grid-4" style="margin-bottom:12px">
+<div class="card" style="text-align:center"><div class="card-title" style="justify-content:center">총 검사 · TOTAL</div><div class="metric-value" id="s-total">0</div></div>
+<div class="card" style="text-align:center"><div class="card-title" style="justify-content:center">양품 · OK</div><div class="metric-value" style="color:var(--ok)" id="s-ok">0</div></div>
+<div class="card" style="text-align:center"><div class="card-title" style="justify-content:center">불량 · NG</div><div class="metric-value" style="color:var(--err)" id="s-ng">0</div></div>
+<div class="card" style="text-align:center"><div class="card-title" style="justify-content:center">수율 · YIELD</div><div class="metric-value" style="color:var(--accent)" id="s-yield">0%</div></div>
+</div>
+<div class="grid grid-3" style="margin-bottom:16px">
+<div class="card" style="text-align:center">
+  <div class="card-title" style="justify-content:center">불량 발생율 · DEFECT RATE</div>
+  <div class="metric-value" id="s-defect-rate" style="font-size:28px">--%</div>
+  <div id="s-defect-label" style="font-size:11px;margin-top:4px;color:var(--text-3)">조회 기간 기준</div>
+</div>
+<div class="card" style="text-align:center">
+  <div class="card-title" style="justify-content:center">Cycle Time <span style="color:var(--text-dim);font-size:9px">ACTUAL AVG</span></div>
+  <div class="metric-value" id="s-cycle" style="font-size:28px">--<span style="font-size:14px">s</span></div>
+  <div id="s-cycle-label" style="font-size:11px;margin-top:4px;color:var(--text-3)">조회 기간 평균</div>
+</div>
+<div class="card" style="text-align:center">
+  <div class="card-title" style="justify-content:center">Takt Time <span style="color:var(--text-dim);font-size:9px">TARGET</span></div>
+  <div class="metric-value" id="s-takt" style="font-size:28px;color:var(--accent)">--<span style="font-size:14px">s</span></div>
+  <div style="font-size:11px;margin-top:4px;color:var(--text-3)">설정 &gt; 운영 정책</div>
+</div>
+</div>
+
+<div style="margin-bottom:14px"><div class="chart-tabs">
+<button class="chart-tab active" onclick="showTab('hourly',this)">시간대별</button>
+<button class="chart-tab" onclick="showTab('daily',this)">날짜별</button>
+<button class="chart-tab" onclick="showTab('defect',this)">불량유형</button>
+</div></div>
+
+<div class="grid grid-2">
+<div class="card">
+<div id="tab-hourly"><div class="card-title">시간대별 검사 추이 · HOURLY</div><div class="chart-container"><canvas id="c-hourly"></canvas></div></div>
+<div id="tab-daily" style="display:none"><div class="card-title">날짜별 생산 추이 · DAILY</div><div class="chart-container"><canvas id="c-daily"></canvas></div></div>
+<div id="tab-defect" style="display:none"><div class="card-title">불량 유형 분포 · DEFECT DISTRIBUTION</div><div class="chart-container"><canvas id="c-defect"></canvas></div></div>
+</div>
+<div class="card"><div class="card-title">불량 유형별 비율 · DEFECT RATIO</div><div class="chart-container"><canvas id="defect-ratio-chart"></canvas></div><div id="defect-ratio-empty" class="empty" style="display:none">불량 데이터 없음</div></div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+Chart.defaults.color='#94A3B8';Chart.defaults.borderColor='rgba(42,56,72,0.5)';Chart.defaults.font.family="'Inter',sans-serif";
+let charts={};function dc(id){if(charts[id])charts[id].destroy()}
+function setToday(){const t=new Date().toISOString().split('T')[0];document.getElementById('sf').value=t;document.getElementById('st').value=t;loadAll()}
+setToday();
+function showTab(name,btn){document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');
+['hourly','daily','defect'].forEach(t=>document.getElementById('tab-'+t).style.display=t===name?'block':'none')}
+const chartOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},color:'#94A3B8',usePointStyle:true}}},scales:{x:{ticks:{font:{size:10,family:"'JetBrains Mono',monospace"},color:'#64748B'},grid:{color:'rgba(42,56,72,0.4)'}},y:{ticks:{font:{size:10,family:"'JetBrains Mono',monospace"},color:'#64748B'},grid:{color:'rgba(42,56,72,0.4)'}}}};
+
+function flashCards(){
+  // 카드에 잠깐 글로우 효과
+  ['s-total','s-ok','s-ng','s-yield'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    const card=el.closest('.card');
+    if(!card)return;
+    card.style.transition='box-shadow 0.3s';
+    card.style.boxShadow='0 0 0 2px var(--accent)';
+    setTimeout(()=>{card.style.boxShadow='none'},600);
+  });
+}
+
+function loadAll(){
+  const f=document.getElementById('sf').value,t=document.getElementById('st').value;
+  if(!f||!t){alert('조회 기간을 선택하세요');return}
+
+  // 조회 정보 표시
+  document.getElementById('query-range').textContent=`${f}  ~  ${t}`;
+  document.getElementById('query-loading').style.display='inline-flex';
+  document.getElementById('query-done').style.display='none';
+
+  fetch(`/api/cycle-time?date_from=${f}&date_to=${t}`).then(r=>r.json()).then(d=>{
+    const takt=d.takt_time||30;
+    document.getElementById('s-takt').innerHTML=takt+'<span style="font-size:14px">s</span>';
+    const cEl=document.getElementById('s-cycle'),clEl=document.getElementById('s-cycle-label');
+    if(d.cycle_time===null||d.cycle_time===undefined){cEl.innerHTML='--<span style="font-size:14px">s</span>';cEl.style.color='';clEl.textContent='데이터 없음';}
+    else{const ct=d.cycle_time,diff=Math.round((ct-takt)*10)/10;
+      cEl.innerHTML=ct+'<span style="font-size:14px">s</span>';
+      cEl.style.color=diff<=0?'var(--ok)':'var(--err)';
+      clEl.textContent=diff<=0?'목표보다 '+Math.abs(diff)+'s 빠름':'목표보다 '+diff+'s 느림';}
+  }).catch(()=>{});
+
+  fetch(`/api/stats?date_from=${f}&date_to=${t}`).then(r=>r.json()).then(d=>{
+    const s=d.today||{};
+    document.getElementById('s-total').textContent=s.total||0;
+    document.getElementById('s-ok').textContent=s.ok_count||0;
+    document.getElementById('s-ng').textContent=s.ng_count||0;
+    document.getElementById('s-yield').textContent=(s.yield_rate||0)+'%';
+
+    const h=d.hourly||[];dc('hourly');
+    charts.hourly=new Chart(document.getElementById('c-hourly'),{type:'bar',data:{labels:h.map(x=>x.hour+'시'),datasets:[{label:'OK',data:h.map(x=>x.ok_count),backgroundColor:'#22C55E',borderRadius:3},{label:'NG',data:h.map(x=>x.ng_count),backgroundColor:'#EF4444',borderRadius:3}]},options:{...chartOpts,scales:{x:{...chartOpts.scales.x,stacked:true},y:{...chartOpts.scales.y,stacked:true}}}});
+
+    const dy=d.daily||[];dc('daily');
+    charts.daily=new Chart(document.getElementById('c-daily'),{type:'line',data:{labels:dy.map(x=>x.date),datasets:[{label:'총검사',data:dy.map(x=>x.total),borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.08)',borderWidth:2,tension:0.35,fill:true,pointRadius:0},{label:'불량',data:dy.map(x=>x.ng_count),borderColor:'#EF4444',backgroundColor:'rgba(239,68,68,0.08)',borderWidth:2,tension:0.35,fill:true,pointRadius:0}]},options:chartOpts});
+
+    const dp=d.defect_pct||[];dc('defect');
+    if(dp.length)charts.defect=new Chart(document.getElementById('c-defect'),{type:'doughnut',data:{labels:dp.map(x=>x.defect_type),datasets:[{data:dp.map(x=>x.cnt),backgroundColor:['#EF4444','#F59E0B','#8B5CF6','#06B6D4','#EC4899'],borderColor:'#1E293B',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94A3B8',font:{size:11},usePointStyle:true,padding:14}}}}});
+
+    dc('defect-ratio');
+    if(dp.length){
+      document.getElementById('defect-ratio-empty').style.display='none';
+      charts['defect-ratio']=new Chart(document.getElementById('defect-ratio-chart'),{type:'doughnut',data:{labels:dp.map(x=>`${x.defect_type}  ${x.pct}%`),datasets:[{data:dp.map(x=>x.pct),backgroundColor:['#EF4444','#F59E0B','#8B5CF6','#06B6D4','#EC4899'],borderColor:'#1E293B',borderWidth:2,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#94A3B8',font:{size:11},usePointStyle:true,padding:14}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed}%`}}}}});
+    }else{
+      document.getElementById('defect-ratio-empty').style.display='block';
+    }
+
+    // 불량 발생율
+    const total=s.total||0,ng=s.ng_count||0;
+    const rate=total>0?Math.round(ng/total*1000)/10:null;
+    const drEl=document.getElementById('s-defect-rate'),dlEl=document.getElementById('s-defect-label');
+    if(rate===null){drEl.textContent='--%';drEl.style.color='';}
+    else{drEl.textContent=rate+'%';drEl.style.color=rate>=5?'var(--err)':rate>=2?'var(--warn)':'var(--ok)';dlEl.textContent=rate>=5?'임계값 초과':rate>=2?'주의':rate===0?'불량 없음':'양호';}
+
+    // 조회 완료 표시
+    document.getElementById('query-loading').style.display='none';
+    document.getElementById('query-done').style.display='inline';
+    document.getElementById('query-done-time').textContent=new Date().toLocaleTimeString('ko-KR',{hour12:false});
+    document.getElementById('query-summary').textContent=total===0?'데이터 없음':`총 ${total}건 (OK ${s.ok_count||0} · NG ${s.ng_count||0})`;
+    flashCards();
+  }).catch(e=>{
+    document.getElementById('query-loading').style.display='none';
+    document.getElementById('query-done').style.display='none';
+    document.getElementById('query-summary').textContent='조회 실패: '+(e.message||'알 수 없는 오류');
+    document.getElementById('query-summary').style.color='var(--err)';
+  });
+
+}
+
+// ── 알람 임계값 초과 실시간 알림 ──
+socket.on('threshold_alert', function(d){
+  const el=document.getElementById('threshold-alerts');
+  const icon=d.type==='HOURLY_NG_LIMIT'?'⏱':'📊';
+  const color=d.type==='HOURLY_NG_LIMIT'?'var(--warn)':'var(--err)';
+  const time=new Date().toLocaleTimeString('ko-KR',{hour12:false});
+  const html=`<div style="background:linear-gradient(135deg,rgba(239,68,68,0.12),rgba(239,68,68,0.04));border:1px solid rgba(239,68,68,0.3);border-left:4px solid ${color};border-radius:6px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;animation:slideIn 0.3s ease">
+<span style="font-size:22px">${icon}</span>
+<div style="flex:1">
+<div style="font-size:13px;font-weight:700;color:var(--err)">${d.detail}</div>
+<div style="font-size:10px;color:var(--text-3);margin-top:3px;font-family:'JetBrains Mono',monospace">${time} · 알람 자동 생성됨 · <a href="/alarm" style="color:var(--accent)">알람 관리 →</a></div>
+</div>
+<button onclick="this.parentElement.remove()" style="background:transparent;border:none;color:var(--text-3);cursor:pointer;font-size:16px">✕</button>
+</div>`;
+  el.insertAdjacentHTML('afterbegin', html);
+  // 데이터 자동 새로고침
+  loadAll();
+});
+</script>
+<style>
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+{% endblock %}

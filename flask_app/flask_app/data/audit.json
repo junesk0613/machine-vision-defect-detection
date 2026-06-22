@@ -1,0 +1,709 @@
+[
+  {
+    "time": "2026-06-16 14:59:04",
+    "user": "SYSTEM",
+    "role": "system",
+    "action": "AUTO_CLEANUP",
+    "detail": "[자동 정리] 이미지 0개, 알람 0개, 감사로그 0개, 채팅파일 0개 삭제"
+  },
+  {
+    "time": "2026-06-15 16:07:39",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LINE_ESTOP_CLEAR",
+    "detail": "source=web"
+  },
+  {
+    "time": "2026-06-15 16:03:48",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-15 16:03:43",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_START",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-15 16:03:43",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_START",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-15 16:03:43",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_START",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-15 15:09:22",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-15 15:09:16",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-15 15:06:53",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-15 15:06:49",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-15 14:54:43",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-15 00:05:11",
+    "user": "SYSTEM",
+    "role": "system",
+    "action": "AUTO_CLEANUP",
+    "detail": "[자동 정리] 이미지 0개, 알람 0개, 감사로그 0개, 채팅파일 0개 삭제"
+  },
+  {
+    "time": "2026-06-14 17:32:25",
+    "user": "SYSTEM",
+    "role": "system",
+    "action": "AUTO_CLEANUP",
+    "detail": "[자동 정리] 이미지 0개, 알람 0개, 감사로그 0개, 채팅파일 0개 삭제"
+  },
+  {
+    "time": "2026-06-13 14:27:44",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-13 11:45:47",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-12 18:11:47",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "USER_CREATED",
+    "detail": "아이디=moble, 역할=admin"
+  },
+  {
+    "time": "2026-06-12 18:11:38",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "USER_ROLE_CHANGED",
+    "detail": "#2 → operator"
+  },
+  {
+    "time": "2026-06-12 18:10:58",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "USER_ROLE_CHANGED",
+    "detail": "#2 → admin"
+  },
+  {
+    "time": "2026-06-12 18:10:43",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "USER_DELETED",
+    "detail": "#5 (mobel)"
+  },
+  {
+    "time": "2026-06-12 18:10:30",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "USER_CREATED",
+    "detail": "아이디=mobel, 역할=admin"
+  },
+  {
+    "time": "2026-06-12 18:10:23",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "USER_ROLE_CHANGED",
+    "detail": "#2 → operator"
+  },
+  {
+    "time": "2026-06-12 18:10:07",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "USER_DELETED",
+    "detail": "#4 (uns)"
+  },
+  {
+    "time": "2026-06-12 18:10:04",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "USER_ROLE_CHANGED",
+    "detail": "#2 → admin"
+  },
+  {
+    "time": "2026-06-12 18:09:37",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "USER_CREATED",
+    "detail": "아이디=uns, 역할=admin"
+  },
+  {
+    "time": "2026-06-12 18:09:25",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "USER_ROLE_CHANGED",
+    "detail": "#2 → operator"
+  },
+  {
+    "time": "2026-06-12 18:09:01",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "ALARM_RESOLVED",
+    "detail": "전체 2건 일괄 해결"
+  },
+  {
+    "time": "2026-06-12 18:08:56",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-12 17:32:29",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_START",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-12 17:31:54",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_START",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-12 17:31:51",
+    "user": "WPF",
+    "role": "operator",
+    "action": "SETTING_CHANGED",
+    "detail": "YOLO=0.5, T=15.0~35.0, H=30.0~70.0"
+  },
+  {
+    "time": "2026-06-12 15:12:35",
+    "user": "SYSTEM",
+    "role": "system",
+    "action": "AUTO_CLEANUP",
+    "detail": "[자동 정리] 이미지 0개, 알람 0개, 감사로그 0개, 채팅파일 0개 삭제"
+  },
+  {
+    "time": "2026-06-11 12:01:38",
+    "user": "SYSTEM",
+    "role": "system",
+    "action": "AUTO_CLEANUP",
+    "detail": "[자동 정리] 이미지 0개, 알람 0개, 감사로그 0개, 채팅파일 0개 삭제"
+  },
+  {
+    "time": "2026-06-10 20:36:47",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-10 20:36:44",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-10 20:31:23",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-10 20:31:15",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-10 20:31:14",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "NOTICE_CREATED",
+    "detail": "공지 #1: 불량 확인"
+  },
+  {
+    "time": "2026-06-10 20:30:54",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-10 20:30:51",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-10 19:31:11",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-10 19:23:19",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-10 19:23:17",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-10 19:11:03",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-10 16:01:32",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "ALARM_RESOLVED",
+    "detail": "전체 6건 일괄 해결"
+  },
+  {
+    "time": "2026-06-10 16:00:06",
+    "user": "WPF",
+    "role": "operator",
+    "action": "SETTING_CHANGED",
+    "detail": "YOLO=0.5, T=15.0~35.0, H=30.0~70.0"
+  },
+  {
+    "time": "2026-06-10 15:59:38",
+    "user": "WPF",
+    "role": "operator",
+    "action": "SETTING_CHANGED",
+    "detail": "YOLO=0.5, T=15.0~35.0, H=30.0~70.0"
+  },
+  {
+    "time": "2026-06-10 15:59:27",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP_CLEAR",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-10 15:59:13",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-10 15:55:51",
+    "user": "WPF",
+    "role": "operator",
+    "action": "SETTING_CHANGED",
+    "detail": "YOLO=0.5, T=15.0~35.0, H=30.0~70.0"
+  },
+  {
+    "time": "2026-06-10 14:30:39",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-10 14:30:33",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-10 14:30:32",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "NOTICE_DELETED",
+    "detail": "공지 #1 삭제"
+  },
+  {
+    "time": "2026-06-10 14:30:20",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-10 14:30:16",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-10 14:30:11",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-10 14:30:06",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-10 14:27:12",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-10 14:27:09",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-10 14:22:34",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-10 14:22:25",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-10 12:29:58",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-10 10:36:05",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-10 10:36:03",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-09 14:26:19",
+    "user": "SYSTEM",
+    "role": "system",
+    "action": "AUTO_CLEANUP",
+    "detail": "[자동 정리] 이미지 0개, 알람 0개, 감사로그 0개, 채팅파일 0개 삭제"
+  },
+  {
+    "time": "2026-06-08 16:29:22",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-08 16:28:28",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-08 16:28:22",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-08 16:28:20",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "NOTICE_CREATED",
+    "detail": "공지 #1: 불량률 관련"
+  },
+  {
+    "time": "2026-06-08 16:27:35",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "BACKUP_IMAGES",
+    "detail": "원본 428개 (최근7일)"
+  },
+  {
+    "time": "2026-06-08 16:27:20",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "BACKUP_IMAGES",
+    "detail": "원본 428개 (최근7일)"
+  },
+  {
+    "time": "2026-06-08 16:26:01",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP_CLEAR",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 16:25:55",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 16:25:30",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-08 16:25:26",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-08 16:24:45",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-08 16:24:17",
+    "user": "WPF",
+    "role": "operator",
+    "action": "SETTING_CHANGED",
+    "detail": "YOLO=0.5, T=15.0~35.0, H=30.0~70.0"
+  },
+  {
+    "time": "2026-06-08 16:23:39",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-08 16:23:37",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-08 16:21:57",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-08 16:21:55",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-08 16:19:59",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-08 16:19:58",
+    "user": "changmi3323",
+    "role": "admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-08 16:19:46",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-08 16:16:42",
+    "user": "WPF",
+    "role": "operator",
+    "action": "SETTING_CHANGED",
+    "detail": "YOLO=0.5, T=15.0~35.0, H=30.0~70.0"
+  },
+  {
+    "time": "2026-06-08 16:14:33",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "ALARM_RESOLVED",
+    "detail": "전체 4건 일괄 해결"
+  },
+  {
+    "time": "2026-06-08 16:14:25",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGIN",
+    "detail": "로그인 성공"
+  },
+  {
+    "time": "2026-06-08 16:14:19",
+    "user": "admin",
+    "role": "super_admin",
+    "action": "LOGOUT",
+    "detail": "로그아웃"
+  },
+  {
+    "time": "2026-06-08 15:13:21",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP_CLEAR",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:17",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:17",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:17",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:17",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:17",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:17",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:17",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:16",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:16",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:16",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:16",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:16",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  },
+  {
+    "time": "2026-06-08 15:13:16",
+    "user": "operator",
+    "role": "-",
+    "action": "LINE_ESTOP",
+    "detail": "source=operator"
+  }
+]

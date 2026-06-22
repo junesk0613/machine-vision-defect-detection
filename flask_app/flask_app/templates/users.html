@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+<div>
+<div class="page-title">회원관리</div>
+<div style="font-size:11px;color:var(--text-3);margin-top:3px;letter-spacing:0.4px">USER MANAGEMENT · ACCESS CONTROL</div>
+</div>
+<div class="header-right">
+<button class="btn btn-accent" onclick="sam()">+ 회원 추가</button>
+</div>
+</div>
+<div class="card" style="padding:0">
+<table class="table">
+<thead><tr><th>ID</th><th>아이디</th><th>역할</th><th>가입일</th><th>아이디 변경</th><th>역할 변경</th><th>비밀번호</th><th style="text-align:right">삭제</th></tr></thead>
+<tbody id="ub"></tbody>
+</table>
+</div>
+
+<div id="am" style="display:none;position:fixed;inset:0;z-index:200;justify-content:center;align-items:center" class="modal-bg">
+<div class="modal-box" style="padding:28px;width:440px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+<h3 style="font-size:16px;font-weight:600;color:var(--text)">회원 추가</h3>
+<button onclick="cam()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3)">✕</button>
+</div>
+<div class="form-group"><label class="form-label">아이디</label><input type="text" id="nu" class="form-input" placeholder="아이디"></div>
+<div class="form-group"><label class="form-label">비밀번호</label><input type="password" id="np" class="form-input" placeholder="비밀번호"></div>
+<div class="form-group"><label class="form-label">역할</label><select id="nr" class="form-input"><option value="operator">현장작업자</option><option value="admin">관리자</option><option value="super_admin">전체관리자</option></select></div>
+<p id="ae" style="color:var(--err);font-size:12px;margin-bottom:10px"></p>
+<button class="btn btn-accent" style="width:100%;padding:12px;font-size:13px" onclick="cu()">추가</button>
+</div>
+</div>
+
+<div id="pm" style="display:none;position:fixed;inset:0;z-index:200;justify-content:center;align-items:center" class="modal-bg">
+<div class="modal-box" style="padding:28px;width:400px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+<h3 style="font-size:16px;font-weight:600;color:var(--text)">비밀번호 변경</h3>
+<button onclick="cpm()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-3)">✕</button>
+</div>
+<input type="hidden" id="pi">
+<div class="form-group"><label class="form-label">새 비밀번호</label><input type="password" id="pp" class="form-input"></div>
+<button class="btn btn-accent" style="width:100%;padding:12px" onclick="cp()">변경</button>
+</div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+const rm={super_admin:'전체관리자',admin:'관리자',operator:'현장작업자'};
+const rc={super_admin:'var(--accent)',admin:'var(--ok)',operator:'var(--text-2)'};
+function lu(){fetch('/api/users').then(r=>r.json()).then(data=>{document.getElementById('ub').innerHTML=data.map(u=>`<tr>
+<td style="color:var(--text-3)">${u.id}</td><td style="font-weight:600;color:var(--text)">${u.username}</td>
+<td><span style="color:${rc[u.role]};font-weight:700">${rm[u.role]||u.role}</span></td>
+<td style="color:var(--text-3);font-size:11px">${u.created_at||''}</td>
+<td><button class="btn btn-sm btn-stop" onclick="eu(${u.id},'${u.username}')">변경</button></td>
+<td><select class="form-input" style="width:auto;padding:5px 8px;font-size:11px" onchange="ur(${u.id},this.value)"><option value="operator" ${u.role==='operator'?'selected':''}>현장작업자</option><option value="admin" ${u.role==='admin'?'selected':''}>관리자</option><option value="super_admin" ${u.role==='super_admin'?'selected':''}>전체관리자</option></select></td>
+<td><button class="btn btn-sm btn-stop" onclick="spm(${u.id})">변경</button></td>
+<td style="text-align:right"><button class="btn btn-sm btn-danger" onclick="du(${u.id},'${u.username}')">삭제</button></td></tr>`).join('')})}
+lu();
+function ur(id,r){fetch(`/api/users/${id}/role`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({role:r})}).then(r=>r.json()).then(d=>{if(d.error)alert(d.error);else lu()})}
+function du(id,n){if(!confirm(`'${n}' 삭제?`))return;fetch(`/api/users/${id}`,{method:'DELETE'}).then(r=>r.json()).then(d=>{if(d.error)alert(d.error);else lu()})}
+function eu(id,cur){const n=prompt('새 아이디:',cur);if(!n)return;fetch(`/api/users/${id}/username`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:n})}).then(r=>r.json()).then(d=>{if(d.error)alert(d.error);else lu()})}
+function sam(){document.getElementById('am').style.display='flex';document.getElementById('ae').textContent=''}
+function cam(){document.getElementById('am').style.display='none'}
+function cu(){const u=document.getElementById('nu').value.trim(),p=document.getElementById('np').value,r=document.getElementById('nr').value;
+if(!u||!p){document.getElementById('ae').textContent='입력하세요';return}
+fetch('/api/users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,role:r})}).then(r=>r.json()).then(d=>{if(d.error)document.getElementById('ae').textContent=d.error;else{cam();lu();document.getElementById('nu').value='';document.getElementById('np').value=''}})}
+function spm(id){document.getElementById('pm').style.display='flex';document.getElementById('pi').value=id}
+function cpm(){document.getElementById('pm').style.display='none'}
+function cp(){const id=document.getElementById('pi').value,p=document.getElementById('pp').value;if(!p)return;
+fetch(`/api/users/${id}/password`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:p})}).then(r=>r.json()).then(d=>{if(d.error)alert(d.error);else{cpm();alert('변경 완료')}})}
+document.getElementById('am').addEventListener('click',e=>{if(e.target.id==='am')cam()});
+document.getElementById('pm').addEventListener('click',e=>{if(e.target.id==='pm')cpm()})
+</script>{% endblock %}

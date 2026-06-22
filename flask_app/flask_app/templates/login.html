@@ -1,0 +1,35 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>로그인 · PCB Inspection MES</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head><body>
+<div class="login-wrap">
+<div class="login-left">
+<h1>PCB Inspector</h1>
+<p style="margin-bottom:36px">양면 자동 검사 & 분류 시스템<br><span style="color:var(--text-dim);font-size:12px;font-family:'JetBrains Mono',monospace">Smart Factory MES · v1.0</span></p>
+<div class="feat-item"><div class="feat-icon" style="color:var(--accent)">◉</div><div><div class="feat-name">AI 양면 동시 검사</div><div class="feat-desc">YOLOv8S · 앞/뒤 자동 불량 판별</div></div></div>
+<div class="feat-item"><div class="feat-icon" style="color:var(--ok)">▤</div><div><div class="feat-name">실시간 생산 모니터링</div><div class="feat-desc">검사 현황 · 통계 · 알람 즉시 확인</div></div></div>
+<div class="feat-item"><div class="feat-icon" style="color:#A78BFA">◈</div><div><div class="feat-name">자동 적재 및 분류</div><div class="feat-desc">로봇팔 투입 → 검사 → 불량 배출</div></div></div>
+<div class="feat-item"><div class="feat-icon" style="color:var(--warn)">⚡</div><div><div class="feat-name">논스톱 컨베이어 운영</div><div class="feat-desc">연속 흐름 방식 검사 라인</div></div></div>
+<div style="margin-top:auto;color:var(--text-dim);font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:0.5px">© 2026 PCB INSPECTION MES</div>
+</div>
+<div class="login-right"><div class="login-box">
+<h2>SIGN IN</h2>
+<p class="sub">관리자 계정으로 시스템에 접속하세요</p>
+{% if error %}<p class="login-error">{{ error }}</p>{% endif %}
+<form method="POST" action="/login">
+{% if show_force %}
+<input type="hidden" name="force_login" value="1"><input type="hidden" name="username" value="{{ username }}"><input type="hidden" name="password" value="{{ password }}">
+<div style="background:var(--warn-soft);padding:12px;border-radius:8px;margin-bottom:16px;border-left:3px solid var(--warn)">
+<p style="color:var(--warn);font-size:12px;font-weight:600">⚠ 다른 곳에서 이미 접속 중</p>
+</div>
+<button type="submit" class="btn btn-danger btn-login">강제 로그인</button>
+<a href="/login" style="display:block;text-align:center;margin-top:12px;color:var(--text-3);font-size:12px;text-decoration:none">취소</a>
+{% else %}
+<div class="form-group"><label class="form-label">아이디</label><input type="text" name="username" class="form-input" placeholder="username" required autofocus></div>
+<div class="form-group"><label class="form-label">비밀번호</label><input type="password" name="password" class="form-input" placeholder="••••••••" required></div>
+<button type="submit" class="btn btn-accent btn-login">LOGIN</button>
+{% endif %}
+</form>
+</div></div></div>
+</body></html>

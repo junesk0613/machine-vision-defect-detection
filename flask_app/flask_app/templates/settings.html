@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+<div>
+<div class="page-title">운영 설정</div>
+<div style="font-size:11px;color:var(--text-3);margin-top:3px;letter-spacing:0.4px">SYSTEM POLICY · ADMIN CONSOLE</div>
+</div>
+</div>
+
+<!-- 탭 메뉴 -->
+<div class="settings-tabs">
+<button class="stab active" data-tab="t-policy" onclick="showTab(this)">운영 정책</button>
+<button class="stab" data-tab="t-retention" onclick="showTab(this)">데이터 보존</button>
+<button class="stab" data-tab="t-notice" onclick="showTab(this)">공지사항</button>
+<button class="stab" data-tab="t-audit" onclick="showTab(this)">활동 로그</button>
+<button class="stab" data-tab="t-backup" onclick="showTab(this)">백업 & 이미지</button>
+</div>
+
+<!-- ─────────────────────────────────────────
+     탭 1: 운영 정책 (공장 + 임계값 + 이메일)
+     ───────────────────────────────────────── -->
+<div id="t-policy" class="tab-pane active">
+<div class="grid grid-2" style="margin-bottom:14px">
+<div class="card">
+<div class="card-title">공장 정보 · COMPANY METADATA</div>
+<div class="form-group"><label class="form-label">회사명</label><input id="p-company" class="form-input"></div>
+<div class="form-group"><label class="form-label">공장명</label><input id="p-factory" class="form-input"></div>
+<div class="form-group"><label class="form-label">기본 PCB 모델</label><input id="p-model" class="form-input"></div>
+<div class="form-group" style="margin-bottom:0"><label class="form-label">목표 Takt Time (초/개)</label>
+<input id="p-takt" type="number" class="form-input" min="1" step="0.1">
+<div style="font-size:10px;color:var(--text-3);margin-top:4px">고객 수요 기준 목표 생산 주기 — Cycle Time 비교 기준값으로 사용</div></div>
+<input id="p-line" type="hidden">
+</div>
+<div class="card">
+<div class="card-title">알람 자동 발생 임계값 · ALARM RULES</div>
+<div class="form-group"><label class="form-label">시간당 NG 한계 (건)</label>
+<input id="p-hourly-ng" type="number" class="form-input" min="1">
+<div style="font-size:10px;color:var(--text-3);margin-top:4px">한 시간 안에 이 건수 넘으면 알람 자동 발생</div></div>
+<div class="form-group" style="margin-bottom:0"><label class="form-label">일일 불량률 한계 (%)</label>
+<input id="p-daily-pct" type="number" class="form-input" min="0" step="0.1">
+<div style="font-size:10px;color:var(--text-3);margin-top:4px">하루 불량률이 이 값 넘으면 알람 자동 발생</div></div>
+</div>
+</div>
+
+<!-- 라인 관리 카드 -->
+<div class="card" style="margin-bottom:14px">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+<div class="card-title" style="margin:0">생산 라인 · PRODUCTION LINES</div>
+<button class="btn btn-accent btn-sm" onclick="addLine()">+ 라인 추가</button>
+</div>
+<div style="font-size:11px;color:var(--text-3);margin-bottom:12px">등록한 라인은 메시지/모니터링에 표시됩니다. 라인 ID는 채팅 데이터 식별자이므로 등록 후 변경하지 마세요.</div>
+<div id="lines-list"></div>
+</div>
+
+<div style="text-align:right">
+<button class="btn btn-accent" style="padding:11px 32px;font-size:13px" onclick="savePolicy()">정책 저장</button>
+<span id="msg-policy" style="margin-left:14px;font-size:12px;color:var(--ok);font-weight:600"></span>
+</div>
+</div>
+
+<!-- ─────────────────────────────────────────
+     탭 2: 데이터 보존
+     ───────────────────────────────────────── -->
+<div id="t-retention" class="tab-pane">
+<div class="card" style="margin-bottom:14px">
+<div class="card-title">데이터 자동 삭제 정책 · DATA RETENTION</div>
+<div class="grid grid-3">
+<div class="form-group"><label class="form-label">검사 이미지 (일)</label>
+<input id="p-ret-img" type="number" class="form-input" min="1">
+<div style="font-size:10px;color:var(--text-3);margin-top:4px">N일 이전 이미지 자동 삭제</div></div>
+<div class="form-group"><label class="form-label">알람 (일)</label>
+<input id="p-ret-alarm" type="number" class="form-input" min="1">
+<div style="font-size:10px;color:var(--text-3);margin-top:4px">N일 이전 알람 자동 삭제</div></div>
+<div class="form-group"><label class="form-label">활동 로그 (일)</label>
+<input id="p-ret-audit" type="number" class="form-input" min="1">
+<div style="font-size:10px;color:var(--text-3);margin-top:4px">N일 이전 감사 로그 삭제</div></div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+<button class="btn btn-danger" onclick="runCleanup()">⚠ 지금 정리 실행</button>
+<button class="btn btn-accent" onclick="saveRetention()">정책 저장</button>
+</div>
+<span id="msg-retention" style="display:block;text-align:right;margin-top:8px;font-size:12px;color:var(--ok);font-weight:600"></span>
+</div>
+</div>
+
+<!-- ─────────────────────────────────────────
+     탭 3: 공지사항
+     ───────────────────────────────────────── -->
+<div id="t-notice" class="tab-pane">
+<div class="card" style="margin-bottom:14px">
+<div class="card-title">공지사항 작성 · NEW NOTICE</div>
+<div class="form-group"><label class="form-label">제목</label><input id="n-title" class="form-input" placeholder="공지 제목"></div>
+<div class="form-group"><label class="form-label">내용</label>
+<textarea id="n-content" class="form-input" rows="3" style="resize:vertical;font-family:inherit" placeholder="공지 내용"></textarea></div>
+<div style="text-align:right"><button class="btn btn-accent" onclick="addNotice()">공지 등록</button></div>
+</div>
+<div class="card" style="padding:0">
+<div class="card-title" style="padding:14px 16px 0">등록된 공지 · NOTICE LIST</div>
+<div id="notice-list" style="padding:0 16px 16px"></div>
+</div>
+</div>
+
+<!-- ─────────────────────────────────────────
+     탭 4: 활동 로그
+     ───────────────────────────────────────── -->
+<div id="t-audit" class="tab-pane">
+<div class="card" style="margin-bottom:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+<span style="font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">필터</span>
+<input id="a-filter-user" class="form-input" style="width:140px" placeholder="사용자명">
+<select id="a-filter-action" class="form-input" style="width:auto">
+<option value="">모든 액션</option>
+<option value="LOGIN">로그인</option><option value="LOGOUT">로그아웃</option>
+<option value="LINE_ESTOP">비상정지</option><option value="LINE_ESTOP_CLEAR">비상정지 해제</option>
+<option value="LINE_START">가동</option><option value="LINE_STOP">정지</option>
+<option value="USER_CREATED">회원 생성</option><option value="USER_DELETED">회원 삭제</option>
+<option value="POLICY_CHANGED">정책 변경</option><option value="SETTING_CHANGED">검사 설정 변경</option>
+<option value="NOTICE_CREATED">공지 작성</option><option value="ALARM_RESOLVED">알람 해결</option>
+<option value="BACKUP_DATA">데이터 백업</option><option value="BACKUP_IMAGES">이미지 백업</option>
+<option value="CLEANUP_RUN">데이터 정리</option>
+</select>
+<button class="btn btn-accent btn-sm" onclick="loadAudit(1)">조회</button>
+</div>
+<div class="card" style="padding:0">
+<table class="table">
+<thead><tr><th>시간</th><th>사용자</th><th>역할</th><th>액션</th><th>상세</th></tr></thead>
+<tbody id="audit-tbody"></tbody>
+</table>
+<div class="pagination" id="audit-pg" style="padding:14px"></div>
+</div>
+</div>
+
+<!-- ─────────────────────────────────────────
+     탭 5: 백업 & 이미지
+     ───────────────────────────────────────── -->
+<div id="t-backup" class="tab-pane">
+<div class="grid grid-2" style="margin-bottom:14px">
+<div class="card">
+<div class="card-title">시스템 백업 · DATA BACKUP</div>
+<p style="font-size:12px;color:var(--text-2);margin-bottom:14px">정책, 공지, 감사로그, 회원 목록을 JSON 한 파일로 다운로드합니다.</p>
+<button class="btn btn-accent" onclick="window.location='/api/backup/data'" style="width:100%;padding:14px">↓ JSON 백업 다운로드</button>
+</div>
+<div class="card">
+<div class="card-title">검사 이미지 백업 · IMAGE EXPORT</div>
+<p style="font-size:12px;color:var(--text-2);margin-bottom:12px">검사 이미지를 ZIP으로 일괄 다운로드합니다. 라벨 합성 옵션을 선택하면 각 이미지에 <span style="color:var(--ok);font-weight:700">OK/NG</span>와 신뢰도가 표시된 버전이 만들어집니다.</p>
+<div style="margin-bottom:12px">
+<div style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px">기간 선택</div>
+<div style="display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;width:fit-content">
+<button class="range-btn active" data-days="7" onclick="setRange(this)">7일</button>
+<button class="range-btn" data-days="30" onclick="setRange(this)">30일</button>
+<button class="range-btn" data-days="365" onclick="setRange(this)">1년</button>
+</div>
+</div>
+<div style="display:flex;gap:8px">
+<button id="btn-img-raw" class="btn btn-stop" onclick="downloadImgBackup(false,this)" style="flex:1;padding:12px">↓ 원본 이미지</button>
+<button id="btn-img-labeled" class="btn btn-accent" onclick="downloadImgBackup(true,this)" style="flex:1;padding:12px">⊕ 라벨 합성본</button>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">데이터 복원 · RESTORE FROM BACKUP</div>
+<p style="font-size:12px;color:var(--text-2);margin-bottom:14px">JSON 백업 파일을 업로드하면 정책, 공지, 감사로그를 복원합니다.<br><span style="color:var(--text-3)">* 계정 정보는 복원되지 않습니다 · 공지/로그는 중복 제외 후 추가됩니다</span></p>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+<label class="btn btn-stop" style="cursor:pointer;padding:10px 16px;flex:1;text-align:center" for="restore-file-input">파일 선택</label>
+<input id="restore-file-input" type="file" accept=".json" style="display:none" onchange="onRestoreFileSelected(this)">
+<span id="restore-filename" style="font-size:12px;color:var(--text-3);flex:2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">선택된 파일 없음</span>
+</div>
+<button id="btn-restore" class="btn btn-accent" onclick="runRestore()" style="width:100%;padding:12px" disabled>복원 실행</button>
+<div id="msg-restore" style="margin-top:10px;font-size:12px;font-weight:600;min-height:18px"></div>
+</div>
+<div class="card">
+<div class="card-title">개별 이미지 라벨 미리보기 · LABELED PREVIEW</div>
+<p style="font-size:12px;color:var(--text-2);margin-bottom:10px">최근 검사 이미지에서 클릭하면 OK/NG 라벨 합성본을 새 창에서 봅니다.</p>
+<div id="recent-imgs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;max-height:340px;overflow-y:auto"></div>
+</div>
+</div>
+
+<!-- 이미지 미리보기 모달 -->
+<div id="img-modal" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.75);justify-content:center;align-items:center">
+  <div style="position:relative;max-width:80vw;max-height:80vh;background:#000;border-radius:10px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.6)">
+    <button onclick="closeImgModal()" style="position:absolute;top:10px;right:10px;z-index:10;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+    <img id="img-modal-img" src="" style="display:block;max-width:80vw;max-height:80vh;object-fit:contain">
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<style>
+.settings-tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:0}
+.stab{padding:10px 18px;background:transparent;border:none;color:var(--text-2);font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;font-family:inherit}
+.stab:hover{color:var(--text)}
+.stab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+.email-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg-soft);border:1px solid var(--border);border-radius:14px;padding:5px 12px;font-size:12px;color:var(--text)}
+.email-chip button{background:transparent;border:none;color:var(--text-3);cursor:pointer;font-size:14px;padding:0;line-height:1}
+.email-chip button:hover{color:var(--err)}
+.notice-item{padding:12px 14px;background:var(--bg-soft);border-left:3px solid var(--accent);border-radius:6px;margin-bottom:8px}
+.notice-item.inactive{opacity:0.5;border-left-color:var(--text-3)}
+.notice-meta{font-size:10px;color:var(--text-3);margin-top:4px;font-family:'JetBrains Mono',monospace}
+.action-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:0.4px;font-family:'JetBrains Mono',monospace}
+.act-login{background:var(--ok-soft);color:var(--ok)}
+.act-logout{background:rgba(100,116,139,0.15);color:var(--text-2)}
+.act-estop{background:var(--err-soft);color:var(--err)}
+.act-default{background:var(--accent-soft);color:var(--accent)}
+.line-row{background:var(--bg-soft);border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:8px}
+.line-row-grid{display:grid;grid-template-columns:1.2fr 1.4fr 1.4fr 1.4fr auto;gap:10px;align-items:end}
+.form-label-mini{display:block;font-size:9px;font-weight:700;color:var(--text-3);letter-spacing:0.5px;margin-bottom:3px;text-transform:uppercase}
+.form-input-sm{padding:7px 10px;font-size:12px;height:32px}
+.range-btn{padding:7px 18px;background:var(--bg-soft);border:none;border-right:1px solid var(--border);color:var(--text-2);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:inherit}
+.range-btn:last-child{border-right:none}
+.range-btn:hover{background:var(--bg-hover);color:var(--text)}
+.range-btn.active{background:var(--accent);color:#fff}
+</style>
+<script>
+function showTab(btn){
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const id=btn.dataset.tab;
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='t-audit') loadAudit(1);
+  if(id==='t-notice') loadNotices();
+  if(id==='t-backup') loadRecentImgs();
+}
+
+// ── 정책 ──
+let _lines=[];
+function loadPolicy(){
+  fetch('/api/policy').then(r=>r.json()).then(p=>{
+    document.getElementById('p-company').value=p.factory.company||'';
+    document.getElementById('p-factory').value=p.factory.factory||'';
+    document.getElementById('p-line').value=p.factory.line||'';
+    document.getElementById('p-model').value=p.factory.model||'';
+    document.getElementById('p-hourly-ng').value=p.alarm_threshold.hourly_ng_max||10;
+    document.getElementById('p-daily-pct').value=p.alarm_threshold.daily_defect_pct_max||5;
+    document.getElementById('p-takt').value=p.takt_time||30;
+    document.getElementById('p-ret-img').value=p.retention.images_days||30;
+    document.getElementById('p-ret-alarm').value=p.retention.alarms_days||90;
+    document.getElementById('p-ret-audit').value=p.retention.audit_days||60;
+  });
+  // 라인 목록 별도 로드
+  fetch('/api/chat/lines').then(r=>r.json()).then(lines=>{
+    _lines=Array.isArray(lines)?lines:[];
+    renderLines();
+  });
+}
+
+// ── 라인 관리 ──
+function renderLines(){
+  const el=document.getElementById('lines-list');
+  if(!_lines.length){el.innerHTML='<div class="empty" style="padding:16px">등록된 라인이 없습니다. + 라인 추가 버튼을 누르세요</div>';return}
+  el.innerHTML=_lines.map((l,i)=>`<div class="line-row" data-i="${i}">
+<div class="line-row-grid">
+<div><label class="form-label-mini">라인 ID</label><input class="form-input form-input-sm" value="${l.id||''}" onchange="updateLine(${i},'id',this.value)" placeholder="line-01"></div>
+<div><label class="form-label-mini">라인명</label><input class="form-input form-input-sm" value="${l.name||''}" onchange="updateLine(${i},'name',this.value)" placeholder="LINE 01"></div>
+<div><label class="form-label-mini">공장</label><input class="form-input form-input-sm" value="${l.factory||''}" onchange="updateLine(${i},'factory',this.value)" placeholder="1공장"></div>
+<div><label class="form-label-mini">PCB 모델</label><input class="form-input form-input-sm" value="${l.model||''}" onchange="updateLine(${i},'model',this.value)" placeholder="RELAY-2CH"></div>
+<button class="btn btn-danger btn-sm" onclick="removeLine(${i})" style="align-self:end;height:32px">삭제</button>
+</div>
+</div>`).join('');
+}
+function updateLine(i,field,val){if(_lines[i])_lines[i][field]=val}
+function addLine(){
+  const nextNum=(_lines.length+1).toString().padStart(2,'0');
+  let nextId=`line-${nextNum}`;
+  // 중복 ID 방지
+  let n=_lines.length+1;
+  while(_lines.some(l=>l.id===nextId)){n++;nextId=`line-${n.toString().padStart(2,'0')}`}
+  _lines.push({id:nextId,name:`LINE ${nextNum}`,factory:document.getElementById('p-factory').value||'',model:document.getElementById('p-model').value||''});
+  renderLines();
+}
+function removeLine(i){
+  if(!confirm(`라인 "${_lines[i].name||_lines[i].id}" 삭제?\n채팅 메시지 파일은 보존되지만 목록에서 사라집니다.`))return;
+  _lines.splice(i,1);renderLines();
+}
+
+function savePolicy(){
+  // 라인 검증
+  const validLines=_lines.filter(l=>(l.id||'').trim()&&(l.name||'').trim());
+  if(_lines.length>0&&validLines.length!==_lines.length){
+    alert('라인 ID와 라인명은 필수입니다');return;
+  }
+  const ids=validLines.map(l=>l.id.trim());
+  if(new Set(ids).size!==ids.length){alert('라인 ID가 중복됩니다');return}
+
+  // 정책 저장
+  const body={
+    factory:{
+      company:document.getElementById('p-company').value,
+      factory:document.getElementById('p-factory').value,
+      line:document.getElementById('p-line').value||(validLines[0]?validLines[0].name:''),
+      model:document.getElementById('p-model').value
+    },
+    alarm_threshold:{
+      hourly_ng_max:parseInt(document.getElementById('p-hourly-ng').value)||10,
+      daily_defect_pct_max:parseFloat(document.getElementById('p-daily-pct').value)||5
+    },
+    takt_time:parseFloat(document.getElementById('p-takt').value)||30
+  };
+
+  Promise.all([
+    fetch('/api/policy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json()),
+    fetch('/api/chat/lines',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lines:validLines})}).then(r=>r.json())
+  ]).then(([p,l])=>{
+    const m=document.getElementById('msg-policy');
+    if(p.ok&&l.ok){m.textContent='✓ 저장 완료';m.style.color='var(--ok)'}
+    else{m.textContent='❌ '+(p.error||l.error||'실패');m.style.color='var(--err)'}
+    setTimeout(()=>m.textContent='',3000);
+  }).catch(e=>{
+    const m=document.getElementById('msg-policy');
+    m.textContent='❌ '+e.message;m.style.color='var(--err)';
+  });
+}
+
+// ── 보존 정책 ──
+function saveRetention(){
+  const body={retention:{
+    images_days:parseInt(document.getElementById('p-ret-img').value)||30,
+    alarms_days:parseInt(document.getElementById('p-ret-alarm').value)||90,
+    audit_days:parseInt(document.getElementById('p-ret-audit').value)||60
+  }};
+  fetch('/api/policy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(r=>r.json()).then(d=>{
+      const m=document.getElementById('msg-retention');
+      if(d.ok){m.textContent='✓ 저장 완료';m.style.color='var(--ok)'}else{m.textContent='❌ 실패';m.style.color='var(--err)'}
+      setTimeout(()=>m.textContent='',3000);
+    })
+}
+function runCleanup(){
+  if(!confirm('보존 기간이 지난 이미지를 영구 삭제합니다.\n계속하시겠습니까?'))return;
+  fetch('/api/cleanup',{method:'POST'}).then(r=>r.json()).then(d=>{
+    alert(d.ok?`정리 완료 — ${d.deleted_images}개 삭제`:'실패');
+  })
+}
+
+// ── 공지 ──
+function loadNotices(){
+  fetch('/api/notices').then(r=>r.json()).then(data=>{
+    const el=document.getElementById('notice-list');
+    if(!data.length){el.innerHTML='<div class="empty">공지 없음</div>';return}
+    el.innerHTML=data.map(n=>`<div class="notice-item ${n.active?'':'inactive'}">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--text)">${n.title}</div>
+<div style="font-size:12px;color:var(--text-2);margin-top:4px;white-space:pre-wrap">${n.content||''}</div>
+<div class="notice-meta">${n.created_at} · ${n.created_by} · ${n.active?'활성':'비활성'}</div></div>
+<div style="display:flex;gap:4px">
+<button class="btn btn-sm btn-stop" onclick="toggleNotice(${n.id},${!n.active})">${n.active?'숨김':'활성'}</button>
+<button class="btn btn-sm btn-danger" onclick="delNotice(${n.id})">삭제</button>
+</div></div></div>`).join('')
+  })
+}
+function addNotice(){
+  const title=document.getElementById('n-title').value.trim();
+  const content=document.getElementById('n-content').value.trim();
+  if(!title){alert('제목을 입력하세요');return}
+  fetch('/api/notices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,content})})
+    .then(r=>r.json()).then(d=>{
+      if(d.ok){document.getElementById('n-title').value='';document.getElementById('n-content').value='';loadNotices()}
+      else alert(d.error||'실패');
+    })
+}
+function toggleNotice(id,active){
+  fetch(`/api/notices/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({active})})
+    .then(()=>loadNotices())
+}
+function delNotice(id){
+  if(!confirm('삭제하시겠습니까?'))return;
+  fetch(`/api/notices/${id}`,{method:'DELETE'}).then(()=>loadNotices());
+}
+
+// ── 활동 로그 ──
+function loadAudit(page){
+  const u=document.getElementById('a-filter-user').value.trim();
+  const a=document.getElementById('a-filter-action').value;
+  let url=`/api/audit?page=${page}&limit=50`;
+  if(u)url+='&user='+encodeURIComponent(u);
+  if(a)url+='&action='+a;
+  fetch(url).then(r=>r.json()).then(d=>{
+    const b=document.getElementById('audit-tbody');
+    if(!d.data||!d.data.length){b.innerHTML='<tr><td colspan="5" class="empty">없음</td></tr>';document.getElementById('audit-pg').innerHTML='';return}
+    b.innerHTML=d.data.map(x=>{
+      let cls='act-default';
+      if(x.action==='LOGIN')cls='act-login';
+      else if(x.action==='LOGOUT')cls='act-logout';
+      else if(x.action.includes('ESTOP'))cls='act-estop';
+      return `<tr><td>${x.time}</td><td style="color:var(--text);font-weight:600">${x.user}</td><td style="color:var(--text-3)">${x.role}</td><td><span class="action-badge ${cls}">${x.action}</span></td><td style="color:var(--text-2)">${x.detail||'-'}</td></tr>`;
+    }).join('');
+    let ph='';for(let i=1;i<=d.pages&&i<=20;i++)ph+=`<button class="page-btn ${i===d.page?'active':''}" onclick="loadAudit(${i})">${i}</button>`;
+    document.getElementById('audit-pg').innerHTML=ph;
+  })
+}
+
+// ── 백업: 최근 이미지 그리드 ──
+function loadRecentImgs(){
+  fetch('/api/history?page=1').then(r=>r.json()).then(d=>{
+    const el=document.getElementById('recent-imgs');
+    const items=[];
+    (d.data||[]).slice(0,30).forEach(r=>{
+      if(r.front_image)items.push({fn:r.front_image,result:r.result,side:'FRONT'});
+      if(r.back_image)items.push({fn:r.back_image,result:r.result,side:'BACK'});
+    });
+    if(!items.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">이미지 없음</div>';return}
+    el.innerHTML=items.map(it=>{
+      const color=it.result==='OK'?'#22C55E':'#EF4444';
+      return `<div style="position:relative;cursor:pointer;border:1px solid var(--border);border-radius:6px;overflow:hidden" onclick="openImgModal('/api/labeled-image/${encodeURIComponent(it.fn)}')">
+<img src="/images/${it.fn}" style="width:100%;height:120px;object-fit:cover;display:block">
+<div style="position:absolute;top:0;left:0;right:0;padding:4px 8px;background:rgba(0,0,0,0.7);display:flex;justify-content:space-between;align-items:center">
+<span style="font-size:9px;font-weight:700;color:${color};font-family:'JetBrains Mono',monospace">${it.result} · ${it.side}</span>
+</div></div>`;
+    }).join('');
+  })
+}
+
+// ── 이미지 백업 다운로드 ──
+let _imgDays=7;
+function setRange(btn){
+  document.querySelectorAll('.range-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  _imgDays=parseInt(btn.dataset.days);
+}
+function downloadImgBackup(labeled, btn){
+  const label=labeled?'⊕ 라벨 합성본':'↓ 원본 이미지';
+  const dayLabel=_imgDays===365?'1년':_imgDays+'일';
+  btn.textContent=`⏳ 생성 중... (최근 ${dayLabel}, 최대 500장)`;
+  btn.disabled=true;
+  setTimeout(()=>{btn.textContent=label;btn.disabled=false;},5000);
+  window.location.href=`/api/backup/images?days=${_imgDays}${labeled?'&labeled=1':''}`;
+}
+
+// ── 데이터 복원 ──
+let _restoreFile=null;
+function onRestoreFileSelected(input){
+  _restoreFile=input.files[0]||null;
+  document.getElementById('restore-filename').textContent=_restoreFile?_restoreFile.name:'선택된 파일 없음';
+  document.getElementById('btn-restore').disabled=!_restoreFile;
+  document.getElementById('msg-restore').textContent='';
+}
+function runRestore(){
+  if(!_restoreFile)return;
+  if(!confirm(`"${_restoreFile.name}" 파일로 복원하시겠습니까?\n정책은 덮어쓰기됩니다.`))return;
+  const fd=new FormData();fd.append('file',_restoreFile);
+  const btn=document.getElementById('btn-restore');
+  const msg=document.getElementById('msg-restore');
+  btn.disabled=true;btn.textContent='복원 중...';
+  fetch('/api/restore/data',{method:'POST',body:fd})
+    .then(r=>r.json()).then(d=>{
+      if(d.ok){
+        msg.style.color='var(--ok)';msg.textContent='✓ 복원 완료 — '+d.summary;
+        loadPolicy();
+      } else {
+        msg.style.color='var(--err)';msg.textContent='❌ '+(d.error||'복원 실패');
+      }
+    }).catch(e=>{msg.style.color='var(--err)';msg.textContent='❌ '+e.message;})
+    .finally(()=>{btn.disabled=false;btn.textContent='복원 실행';});
+}
+
+loadPolicy();
+
+function openImgModal(src){
+  document.getElementById('img-modal-img').src=src;
+  document.getElementById('img-modal').style.display='flex';
+}
+function closeImgModal(){
+  document.getElementById('img-modal').style.display='none';
+  document.getElementById('img-modal-img').src='';
+}
+document.getElementById('img-modal').addEventListener('click',function(e){if(e.target===this)closeImgModal()});
+</script>
+{% endblock %}

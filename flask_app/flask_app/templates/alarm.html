@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+<div>
+<div class="page-title">알람 관리</div>
+<div style="font-size:11px;color:var(--text-3);margin-top:3px;letter-spacing:0.4px">ALARM MANAGEMENT · EVENT TRACKING</div>
+</div>
+<div class="header-right" style="gap:10px;flex-wrap:wrap">
+<div style="display:flex;gap:4px;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+<button class="flt-btn active" data-type="" onclick="setFilter(this)">전체</button>
+<button class="flt-btn" data-type="ESTOP" onclick="setFilter(this)">🚨 비상정지</button>
+<button class="flt-btn" data-type="TEMP_HUMIDITY" onclick="setFilter(this)">🌡 온습도</button>
+<button class="flt-btn" data-type="COMM_LOST" onclick="setFilter(this)">📡 통신끊김</button>
+<button class="flt-btn" data-type="SYSTEM" onclick="setFilter(this)">⚙ 시스템</button>
+</div>
+<label style="font-size:12px;display:flex;align-items:center;gap:6px;color:var(--text-2);cursor:pointer">
+<input type="checkbox" id="sa" onchange="la()" style="accent-color:var(--accent)"> 해결됨 포함
+</label>
+<button id="resolve-all-btn" class="btn btn-accent btn-sm" onclick="resolveAll()" style="display:none">✓ 전체 해제</button>
+</div>
+</div>
+
+<!-- 비상정지 강조 카드 (미해결 ESTOP 있을 때만) -->
+<div id="estop-active-card" style="display:none;background:linear-gradient(135deg,#7F1D1D,#991B1B);border:1px solid #DC2626;border-radius:10px;padding:18px 20px;margin-bottom:16px">
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+<div style="font-size:28px">⚠</div>
+<div style="flex:1">
+<div style="font-size:16px;font-weight:700;color:#fff;letter-spacing:0.5px">현재 비상정지 활성</div>
+<div style="font-size:12px;color:#FECACA;margin-top:2px" id="estop-active-detail">사유 로딩 중...</div>
+</div>
+<button class="btn btn-stop" onclick="resolveActiveEstop()" style="padding:9px 18px;background:#fff;color:#991B1B;font-weight:700">⟲ 해제하기</button>
+</div>
+<div id="estop-active-time" style="font-size:11px;color:#FCA5A5;font-family:'JetBrains Mono',monospace"></div>
+</div>
+
+<div class="card" style="padding:0">
+<table class="table">
+<thead><tr><th>시간</th><th>유형</th><th>상세 / 사유</th><th>상태</th><th>지속</th><th style="text-align:right">처리</th></tr></thead>
+<tbody id="ab"></tbody>
+</table>
+</div>
+{% endblock %}
+{% block scripts %}<style>
+.flt-btn{padding:6px 12px;background:var(--bg-soft);border:none;border-right:1px solid var(--border);color:var(--text-2);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s}
+.flt-btn:last-child{border-right:none}
+.flt-btn:hover{background:var(--bg-hover);color:var(--text)}
+.flt-btn.active{background:var(--accent);color:#fff}
+</style>
+<script>
+let activeEstopId=null;
+let activeFilter='';
+
+function fmtDur(start,end){
+  if(!start) return '-';
+  const s=new Date(start), e=end?new Date(end):new Date();
+  const sec=Math.floor((e-s)/1000);
+  if(sec<60) return sec+'초';
+  const m=Math.floor(sec/60), ss=sec%60;
+  if(m<60) return m+'분 '+ss+'초';
+  const h=Math.floor(m/60), mm=m%60;
+  return h+'시간 '+mm+'분';
+}
+
+function setFilter(btn){
+  document.querySelectorAll('.flt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter=btn.dataset.type;
+  la();
+}
+
+function la(){
+  const a=document.getElementById('sa').checked?'1':'0';
+  fetch(`/api/alarm?all=${a}`).then(r=>r.json()).then(data=>{
+    const b=document.getElementById('ab');
+    const estopCard=document.getElementById('estop-active-card');
+
+    // BOX_FULL 제외
+    data=data.filter(x=>x.type!=='BOX_FULL');
+
+    // 미해결 ESTOP 찾기
+    const activeEstop=data.find(x=>x.type==='ESTOP' && !x.resolved);
+    if(activeEstop){
+      activeEstopId=activeEstop.id;
+      estopCard.style.display='block';
+      document.getElementById('estop-active-detail').textContent=activeEstop.detail||'(사유 미입력)';
+      const start=activeEstop.timestamp||'';
+      document.getElementById('estop-active-time').textContent=`발생 시각: ${start}  ·  경과: ${fmtDur(start)}`;
+    } else {
+      activeEstopId=null;
+      estopCard.style.display='none';
+    }
+
+    const unresolvedCnt=data.filter(x=>!x.resolved).length;
+    const raBtn=document.getElementById('resolve-all-btn');
+    if(raBtn)raBtn.style.display=unresolvedCnt>1?'inline-block':'none';
+
+    // 종류 필터 적용
+    const filtered=activeFilter?data.filter(x=>x.type===activeFilter):data;
+    if(!filtered.length){b.innerHTML='<tr><td colspan="6" class="empty">없음</td></tr>';return}
+    const tm={ESTOP:'🚨 비상정지',TEMP_HUMIDITY:'🌡 온습도',COMM_LOST:'📡 통신끊김',SYSTEM:'⚙ 시스템'};
+    b.innerHTML=filtered.map(a=>{
+      const isEstop=a.type==='ESTOP';
+      const dur=isEstop?fmtDur(a.timestamp,a.resolved?a.resolved_at:null):'-';
+      const durColor=isEstop&&!a.resolved?'color:var(--err);font-weight:700':isEstop?'color:var(--text-2)':'color:var(--text-dim)';
+      let detailHtml=`<span style="color:var(--text-2)">${a.detail||'-'}</span>`;
+      if(isEstop&&a.resolved){
+        detailHtml=`<div style="color:var(--text-2);font-weight:600">${a.detail||'-'}</div><div style="font-size:10px;color:var(--text-3);margin-top:2px;font-family:'JetBrains Mono',monospace">해제: ${a.resolved_at||'-'}</div>`;
+      }
+      return `<tr><td>${a.timestamp||''}</td><td style="font-weight:600">${tm[a.type]||a.type}</td><td>${detailHtml}</td><td>${a.resolved?'<span class="badge-ok">해결</span>':'<span class="badge-ng">미해결</span>'}</td><td style="${durColor};font-family:'JetBrains Mono',monospace">${dur}</td><td style="text-align:right">${a.resolved?`<span style="color:var(--text-dim);font-size:11px">${a.resolved_at||''}</span>`:`<button class="btn btn-sm btn-accent" onclick="ra(${a.id})">확인</button>`}</td></tr>`;
+    }).join('')
+  })
+}
+la();setInterval(la,5000);
+
+function ra(id){fetch(`/api/alarm/${id}/resolve`,{method:'POST'}).then(()=>la())}
+
+function resolveAll(){
+  if(!confirm('미해결 알람을 모두 해결 처리하시겠습니까?'))return;
+  fetch('/api/alarm/resolve-all',{method:'POST'}).then(r=>r.json()).then(d=>{
+    la();
+  });
+}
+
+function resolveActiveEstop(){
+  if(!confirm('비상정지를 해제하시겠습니까?\n라인이 재가동됩니다.'))return;
+  // WPF로 해제 명령 전송 + 알람 직접 resolve
+  fetch('/api/system',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'estop_clear',source:'web'})})
+    .then(r=>r.json()).then(d=>{setTimeout(la,500)});
+}
+</script>{% endblock %}

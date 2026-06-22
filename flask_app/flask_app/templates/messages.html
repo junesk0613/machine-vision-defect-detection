@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+<div>
+<div class="page-title">메시지 · 현장 통신</div>
+<div style="font-size:11px;color:var(--text-3);margin-top:3px;letter-spacing:0.4px">SHOP-FLOOR MESSENGER · LINE COMMUNICATION</div>
+</div>
+</div>
+
+<div class="grid" style="grid-template-columns:240px 1fr;gap:14px;height:calc(100vh - 180px)">
+
+<!-- 좌측: 라인 목록 -->
+<div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
+<div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:0.6px">라인 · LINES</div>
+</div>
+<div id="line-list" style="overflow-y:auto;flex:1"><div style="padding:20px;color:var(--text-3);font-size:11px;text-align:center">로딩 중...</div></div>
+</div>
+
+<!-- 우측: 채팅창 -->
+<div class="card" style="padding:0;overflow:hidden;display:flex;flex-direction:column">
+<!-- 채팅 헤더 -->
+<div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center" id="chat-header">
+<div>
+<div id="chat-title" style="font-size:14px;font-weight:700;color:var(--text)">라인을 선택하세요</div>
+<div id="chat-subtitle" style="font-size:11px;color:var(--text-3);margin-top:2px;font-family:'JetBrains Mono',monospace">-</div>
+</div>
+<div id="chat-status" style="display:flex;align-items:center;gap:10px">
+<button id="btn-clear-chat" onclick="clearAllMessages()" class="btn btn-stop btn-sm" style="display:none;font-size:10px;padding:4px 10px">전체 삭제</button>
+<span id="wpf-status" style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace">-</span>
+</div>
+</div>
+
+<!-- 메시지 리스트 -->
+<div id="messages-area" style="flex:1;overflow-y:auto;padding:18px;background:var(--bg-deep)">
+<div class="empty" style="margin-top:80px">좌측에서 라인을 선택하면 메시지가 표시됩니다</div>
+</div>
+
+<!-- 입력 영역 -->
+<div id="input-area" style="border-top:1px solid var(--border);padding:12px 14px;background:var(--bg-soft);display:none">
+<div id="file-preview" style="display:none;background:var(--bg-card);padding:8px 12px;border-radius:6px;margin-bottom:8px;align-items:center;gap:8px;font-size:11px">
+<span>📎</span><span id="file-preview-name" style="flex:1;color:var(--text)"></span>
+<button onclick="cancelFile()" style="background:transparent;border:none;color:var(--err);cursor:pointer;font-size:14px">✕</button>
+</div>
+<div style="display:flex;gap:8px;align-items:flex-end">
+<label class="btn btn-stop btn-sm" style="cursor:pointer;display:flex;align-items:center;height:40px;padding:0 12px">
+📎 <input type="file" id="file-input" style="display:none" onchange="onFileSelect()">
+</label>
+<textarea id="msg-input" class="form-input" rows="1" placeholder="메시지 입력... (Enter: 전송, Shift+Enter: 줄바꿈)" style="flex:1;resize:none;font-family:inherit;max-height:120px;padding:10px 12px" onkeydown="onKey(event)"></textarea>
+<button class="btn btn-accent" onclick="sendMessage()" style="height:40px;padding:0 20px;font-weight:700">전송</button>
+</div>
+</div>
+</div>
+
+</div>
+{% endblock %}
+{% block scripts %}
+<style>
+.line-item{padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;display:flex;justify-content:space-between;align-items:center}
+.line-item:hover{background:var(--bg-soft)}
+.line-item.active{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.line-item-name{font-size:13px;font-weight:700;color:var(--text)}
+.line-item-sub{font-size:10px;color:var(--text-3);margin-top:3px;font-family:'JetBrains Mono',monospace}
+.line-unread{background:var(--err);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
+
+.msg{margin-bottom:14px;display:flex;flex-direction:column;max-width:70%}
+.msg-web{align-self:flex-end;margin-left:auto}
+.msg-wpf{align-self:flex-start;margin-right:auto}
+.msg-bubble{padding:9px 14px;border-radius:14px;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.msg-web .msg-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:3px}
+.msg-wpf .msg-bubble{background:var(--bg-card);color:var(--text);border:1px solid var(--border);border-bottom-left-radius:3px}
+.msg-meta{font-size:10px;color:var(--text-3);margin-top:4px;font-family:'JetBrains Mono',monospace}
+.msg-web .msg-meta{text-align:right}
+.msg-file{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(0,0,0,0.15);border-radius:8px;font-size:12px;margin-top:6px;text-decoration:none;color:inherit;cursor:pointer}
+.msg-file:hover{background:rgba(0,0,0,0.25)}
+.msg-wpf .msg-file{background:var(--bg-soft);border:1px solid var(--border);color:var(--text)}
+.msg-del{background:transparent;border:none;color:var(--text-3);cursor:pointer;font-size:9px;opacity:0;transition:opacity 0.15s;margin-left:6px;padding:1px 4px;border-radius:3px}
+.msg:hover .msg-del{opacity:1}
+.msg-del:hover{color:var(--err);background:var(--err-soft)}
+</style>
+<script>
+let currentLine=null;
+let pendingFile=null;
+let lines=[];
+
+function loadLines(){
+  const el=document.getElementById('line-list');
+  fetch('/api/chat/lines').then(r=>{
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(data=>{
+    lines=Array.isArray(data)?data:[];
+    if(!lines.length){
+      el.innerHTML='<div class="empty" style="padding:24px;text-align:center"><div>라인 없음</div><small style="color:var(--text-3);display:block;margin-top:6px">운영 설정에서 공장/라인 정보를 등록하세요</small></div>';
+      return;
+    }
+    // 미읽음 카운트 fetch (실패해도 라인은 보이도록 catch 처리)
+    Promise.all(lines.map(l=>
+      fetch(`/api/chat/${l.id}/unread?direction=wpf_to_web`)
+        .then(r=>r.ok?r.json():{unread:0})
+        .catch(()=>({unread:0}))
+        .then(d=>({...l,unread:d.unread||0}))
+    )).then(enriched=>{
+      el.innerHTML=enriched.map(l=>`<div class="line-item ${currentLine===l.id?'active':''}" onclick="selectLine('${l.id}')">
+<div><div class="line-item-name">${l.name||l.id}</div><div class="line-item-sub">${l.factory||''} · ${l.model||''}</div></div>
+${l.unread?`<span class="line-unread">${l.unread}</span>`:''}
+</div>`).join('');
+    });
+  }).catch(e=>{
+    el.innerHTML=`<div class="empty" style="padding:24px;text-align:center;color:var(--err)"><div>라인 로드 실패</div><small style="display:block;margin-top:6px">${e.message}</small></div>`;
+    console.error('loadLines failed:', e);
+  });
+}
+
+function selectLine(id){
+  currentLine=id;
+  const l=lines.find(x=>x.id===id);
+  if(l){
+    document.getElementById('chat-title').textContent=l.name;
+    document.getElementById('chat-subtitle').textContent=`${l.factory||'-'} · ${l.model||'-'} · ID: ${l.id}`;
+  }
+  document.getElementById('chat-status').innerHTML='<span style="color:var(--text-3)">● 상태 확인 중</span>';
+  document.getElementById('input-area').style.display='block';
+  loadMessages();
+  // 미읽음 처리
+  fetch(`/api/chat/${id}/read`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({direction:'wpf_to_web'})})
+    .then(()=>loadLines());
+  // WPF 연결 상태 확인 (소켓 연결 여부)
+  checkWpfStatus();
+}
+
+function loadMessages(){
+  if(!currentLine)return;
+  fetch(`/api/chat/${currentLine}/messages?limit=200`).then(r=>r.json()).then(msgs=>{
+    const el=document.getElementById('messages-area');
+    if(!msgs||!msgs.length){el.innerHTML='<div class="empty" style="margin-top:60px">메시지 없음. 첫 메시지를 보내보세요.</div>';return}
+    el.innerHTML='<div style="display:flex;flex-direction:column">'+msgs.map(renderMsg).join('')+'</div>';
+    el.scrollTop=el.scrollHeight;
+  })
+}
+
+function renderMsg(m){
+  const cls=m.direction==='web_to_wpf'?'msg-web':'msg-wpf';
+  const senderTag=m.direction==='web_to_wpf'?`${m.sender} · 관제`:`${m.sender} · 현장`;
+  let body='';
+  if(m.content) body+=`<div class="msg-bubble">${escapeHtml(m.content)}</div>`;
+  if(m.file_name){
+    const dn=getDisplayName(m.file_name);
+    const size=m.file_size?formatBytes(m.file_size):'';
+    body+=`<a class="msg-bubble msg-file" href="/api/chat/file/${encodeURIComponent(m.file_name)}" target="_blank">📎 ${dn} <span style="color:var(--text-3);font-family:'JetBrains Mono',monospace">${size}</span></a>`;
+  }
+  // 삭제 버튼 (자기 메시지만 또는 super_admin)
+  const delBtn=`<button class="msg-del" onclick="deleteMsg(${m.id})" title="삭제">✕</button>`;
+  return `<div class="msg ${cls}">${body}<div class="msg-meta">${senderTag} · ${m.timestamp}${m.read?' ✓':''} ${delBtn}</div></div>`;
+}
+
+function deleteMsg(msgId){
+  if(!confirm('이 메시지를 삭제하시겠습니까?'))return;
+  fetch(`/api/chat/${currentLine}/delete`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({msg_id:msgId})})
+    .then(r=>r.json()).then(d=>{if(d.ok)loadMessages();else alert(d.error||'삭제 실패')});
+}
+
+function clearAllMessages(){
+  if(!confirm('이 라인의 모든 메시지를 삭제하시겠습니까?\n첨부 파일도 함께 삭제됩니다.'))return;
+  fetch(`/api/chat/${currentLine}/delete`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({all:true})})
+    .then(r=>r.json()).then(d=>{if(d.ok)loadMessages();else alert(d.error||'삭제 실패')});
+}
+
+function checkWpfStatus(){
+  // 서버의 소켓 연결 수로 WPF 연결 상태 추정
+  const el=document.getElementById('wpf-status');
+  const btn=document.getElementById('btn-clear-chat');
+  if(btn)btn.style.display='inline-block';
+  // WPF가 소켓으로 연결되어 있는지는 서버에서만 알 수 있으므로
+  // 마지막 메시지 시간 기준으로 판단 (5분 이내 메시지 있으면 ONLINE)
+  fetch(`/api/chat/${currentLine}/messages?limit=1`).then(r=>r.json()).then(msgs=>{
+    if(!msgs||!msgs.length){el.innerHTML='<span style="color:var(--text-3)">● 대기</span>';return}
+    const last=msgs[msgs.length-1];
+    if(last.direction==='wpf_to_web'){
+      const diff=(Date.now()-new Date(last.timestamp).getTime())/60000;
+      if(diff<5) el.innerHTML='<span style="color:var(--ok)">● ONLINE</span>';
+      else el.innerHTML=`<span style="color:var(--warn)">● 마지막 응답 ${Math.floor(diff)}분 전</span>`;
+    } else {
+      el.innerHTML='<span style="color:var(--text-3)">● 응답 대기</span>';
+    }
+  }).catch(()=>{el.innerHTML='<span style="color:var(--err)">● 연결 실패</span>'});
+}
+
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c])}
+function getDisplayName(fn){const p=fn.split('_');return p.length>=5?p.slice(4).join('_'):fn}
+function formatBytes(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(1)+' KB';return (b/1048576).toFixed(1)+' MB'}
+
+function onFileSelect(){
+  const f=document.getElementById('file-input').files[0];
+  if(!f)return;
+  if(f.size>30*1024*1024){alert('30MB 이하 파일만 가능');document.getElementById('file-input').value='';return}
+  pendingFile=f;
+  document.getElementById('file-preview').style.display='flex';
+  document.getElementById('file-preview-name').textContent=`${f.name} (${formatBytes(f.size)})`;
+}
+function cancelFile(){
+  pendingFile=null;
+  document.getElementById('file-input').value='';
+  document.getElementById('file-preview').style.display='none';
+}
+
+function onKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}
+}
+
+function sendMessage(){
+  if(!currentLine){alert('라인을 선택하세요');return}
+  const text=document.getElementById('msg-input').value.trim();
+  if(!text && !pendingFile){return}
+  const fd=new FormData();
+  fd.append('source','web');
+  fd.append('content',text);
+  if(pendingFile)fd.append('file',pendingFile);
+  fetch(`/api/chat/${currentLine}/send`,{method:'POST',body:fd})
+    .then(r=>r.json()).then(d=>{
+      if(d.ok){
+        document.getElementById('msg-input').value='';
+        cancelFile();
+        loadMessages();
+      } else alert(d.error||'전송 실패');
+    })
+}
+
+// Socket.IO 실시간 수신 (main.js에서 선언된 글로벌 socket 사용)
+socket.on('chat_message',m=>{
+  if(m.line_id===currentLine){
+    loadMessages();
+    if(m.direction==='wpf_to_web'){
+      fetch(`/api/chat/${currentLine}/read`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({direction:'wpf_to_web'})});
+      checkWpfStatus();
+    }
+  }
+  loadLines(); // 미읽음 갯수 갱신
+});
+socket.on('chat_deleted',d=>{if(d.line_id===currentLine)loadMessages()});
+socket.on('chat_cleared',d=>{if(d.line_id===currentLine)loadMessages()});
+
+loadLines();
+setInterval(loadLines, 15000); // 주기적 갱신
+</script>
+{% endblock %}
